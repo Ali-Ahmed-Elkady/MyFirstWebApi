@@ -1,34 +1,40 @@
 ﻿using AutoMapper;
 using BLL.Dto;
+using BLL.Services.Unified_Response;
 using DAL.Entities;
 using DAL.Repo.Abstraction;
 
 namespace BLL.Services.TariffService
 {
-    public class TariffService : ITariffService
+    public partial class TariffService : ITariffService
     {
         private readonly IRepo<Tariff> repo;
+        private readonly IRepo<TariffSteps> steps;
         private readonly IMapper mapper;
-        public TariffService(IRepo<Tariff> Repo, IMapper Mapper)
+      
+        public TariffService(IRepo<Tariff> Repo, IMapper Mapper, IRepo<TariffSteps> steps)
         {
             repo = Repo;
             mapper = Mapper;
+            this.steps = steps;
         }
-        public async Task<(bool, string)> Add(TariffDto tariff)
+        public async Task<UnifiedResponse<TariffDto>> Add(TariffDto tariff)
         {
             try
             {
                 if (tariff != null)
                 {
                     var Tariff = mapper.Map<Tariff>(tariff);
-                    await repo.Add(Tariff);
-                    return (true, "Tariff Added Successfully");
+                    (bool isSucess ,string message) result = await repo.Add(Tariff);
+                    if(result.isSucess)
+                    return UnifiedResponse<TariffDto>.SuccessResult(tariff,"tariff added successfully");
+                    return UnifiedResponse<TariffDto>.ErrorResult("An Error Happend While Adding Tariff");
                 }
-                throw new Exception("Entity Cannot be Null");
+                return UnifiedResponse<TariffDto>.ErrorResult("Tariff cannot be null");
             }
             catch (Exception ex)
             {
-                return (false, ex.Message);
+                return UnifiedResponse<TariffDto>.ErrorResult(ex.Message);
             }
         }
 

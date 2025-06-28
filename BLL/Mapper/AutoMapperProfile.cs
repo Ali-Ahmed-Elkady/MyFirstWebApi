@@ -14,7 +14,7 @@ namespace BLL.Mapper
             CreateMap<CustomerConsumptionDTO, CustomerConsumptions>().ReverseMap();
             CreateMap<ActivityTypeDto, ActivityType>().ReverseMap();
             CreateMap<TariffDto, Tariff>().ReverseMap();
-
+            CreateMap<TariffStepsDto, TariffSteps>().ReverseMap();
 
         }
     }
