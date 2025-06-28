@@ -23,13 +23,10 @@ public class ActivityTypeController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> AddActivity([FromBody] ActivityTypeDto activity)
     {
-        if (activity == null)
-        {
-            return BadRequest("Invalid activity data.");
-        }
-
-        var (success, message) = await this.activity.Add(activity);
-        return success ? Ok(message) : BadRequest(message);
+         var result  = await this.activity.Add(activity);
+         if (result.Success)
+            return Ok(result);
+            return BadRequest();
     }
     [HttpPut]
     public async Task<IActionResult> Update(ActivityTypeDto Activity)
@@ -38,9 +35,11 @@ public class ActivityTypeController : ControllerBase
         return Ok(result);
     }
     [HttpDelete]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(ActivityTypeDto Activity)
     {
-        var result = await activity.Delete(id);
-        return Ok(result);
+        var result = await activity.Delete(Activity);
+        if (result.Success)
+            return Ok(result);
+        return BadRequest(result);
     }
 }

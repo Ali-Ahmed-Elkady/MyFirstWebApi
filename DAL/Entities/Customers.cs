@@ -10,7 +10,7 @@ namespace DAL.Entities
             IsDeleted = false;
         }
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public string? Address { get; set; }
         public DateTime InstallationDate { get; set; }
         public long CustomerCode { get; set;}
@@ -24,6 +24,8 @@ namespace DAL.Entities
         public string? ModifiedBy { get; set; }
         public bool IsDeleted { get; set; }
         public List<CustomerConsumptions> Consumptions { get; set; }
+        public int ActivityId { get; set; }
+        public ActivityType Activity { get; set; }
         public void UpdateTimestamp()
         {
             ModifiedAt = DateTime.Now; 

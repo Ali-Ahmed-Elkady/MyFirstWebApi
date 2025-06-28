@@ -104,7 +104,7 @@ namespace DAL.Repo.Implementation
                 var result = await dbset.ToListAsync();
                 return (result);
             }
-            var result2 =await dbset.Where<T>(predicate).ToListAsync();
+            var result2 =await dbset.Where(predicate).ToListAsync();
             return (result2);
         }
     }

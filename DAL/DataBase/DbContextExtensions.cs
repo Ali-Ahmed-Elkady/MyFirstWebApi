@@ -9,7 +9,7 @@ public static class DbContextExtensions
         modelBuilder.Entity<ActivityType>().ToTable("ActivityTypes").HasIndex(a=>a.Code).IsUnique();
         modelBuilder.Entity<AppUser>().ToTable("Users");
         modelBuilder.Entity<CustomerConsumptions>().ToTable("CustomerConsumptions");
-        modelBuilder.Entity<Customers>().ToTable("Customers");
+        modelBuilder.Entity<Customers>().ToTable("Customers").HasIndex(a => a.CustomerCode).IsUnique();
         modelBuilder.Entity<Esdar>().ToTable("Esdar");
         modelBuilder.Entity<Tariff>().ToTable("Tariffs");
         modelBuilder.Entity<TariffSteps>().ToTable("TariffSteps");

@@ -6,5 +6,6 @@
         public required string Name { get; set; }
         public int Code { get; set; }
         public List<Tariff>? Tariffs { get; set; }
+        List<Customers>? Customers { get; set; }
     }
 }

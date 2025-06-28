@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BLL.Dto;
+using BLL.Services.Unified_Response;
 using DAL.Entities;
 using DAL.Repo.Abstraction;
 
@@ -14,7 +15,7 @@ namespace BLL.Services.ActivityTypeService
             repo = Repo;
             mapper = Mapper;
         }
-        public async Task<(bool, string)> Add(ActivityTypeDto ActivityType)
+        public async Task<UnifiedResponse<ActivityTypeDto>> Add(ActivityTypeDto ActivityType)
         {
             try
             {
@@ -24,41 +25,47 @@ namespace BLL.Services.ActivityTypeService
                     throw new Exception("Name Cannot be null");
                 var activity = mapper.Map<ActivityType>(ActivityType);
                 await repo.Add(activity);
-                return (true, "Activity Added Successfully");
+                return UnifiedResponse<ActivityTypeDto>.SuccessResult(ActivityType);
             }
             catch(Exception ex)
             {
-                return (false, ex.Message);
+                return UnifiedResponse<ActivityTypeDto>.ErrorResult(ex.Message);
             }
         }
 
-        public async Task<(bool, string)> Delete(int code)
+        public async Task<UnifiedResponse<ActivityTypeDto>> Delete(ActivityTypeDto activity)
         {
             try
             {
-                var result = repo.Get(a=>a.Code == code);
-                if (result is null)
+                var result = await repo.Get(a=>a.Code == activity.Code);
+                if (result is null || result.Count==0)
                     throw new Exception("Activity Not Found");
-                await repo.Delete(code);
-                return (true, "Activity Deleted Successfully");
+                await repo.Delete(activity.Code);
+                return UnifiedResponse<ActivityTypeDto>.SuccessResult(activity); 
             }
             catch(Exception ex)
             {
-                return (false, ex.Message);
+                return UnifiedResponse<ActivityTypeDto>.ErrorResult(ex.Message);
             }
         }
 
-        public async Task<(bool, string)> Edit(ActivityTypeDto activity)
+        public async Task<UnifiedResponse<ActivityTypeDto>> Edit(ActivityTypeDto activity)
         {
-            var existing = await repo.Get(a => a.Code == activity.Code);
-            if (existing is null)
-                return (false, "Activity not found");
+            try
+            {
+                var existing = await repo.Get(a => a.Code == activity.Code);
+                if (existing is null)
+                    throw new Exception("Activity Not Found In DB!");
 
-            var updated = mapper.Map<ActivityType>(activity); 
+                var updated = mapper.Map<ActivityType>(activity);
 
-            await repo.Edit(updated); 
-
-            return (true, "Activity updated successfully");
+                await repo.Edit(updated);
+                return UnifiedResponse<ActivityTypeDto>.SuccessResult(activity);
+            }
+            catch (Exception ex)
+            {
+                return UnifiedResponse<ActivityTypeDto>.ErrorResult(ex.Message);
+            }
         }
 
 

@@ -8,5 +8,6 @@
         public long CustomerCode { get; set; }
         public string? Gender { get; set; }
         public long MeterNo { get; set; }
+        public int ActivityId { get; set; }
     }
 }

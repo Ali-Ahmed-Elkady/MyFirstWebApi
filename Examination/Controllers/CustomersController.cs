@@ -27,7 +27,6 @@ namespace Examination.Controllers
             return Ok(result);
         }
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> AddCustomer([FromBody] CustomerDto customer)
         {
             if (customer == null)
