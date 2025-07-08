@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250628091004_initial")]
-    partial class initial
+    [Migration("20250629191902_RelationShipBetweenCustomerAndConsumptions")]
+    partial class RelationShipBetweenCustomerAndConsumptions
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -127,14 +127,14 @@ namespace DAL.Migrations
                     b.Property<DateTime>("Month")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("customersId")
+                    b.Property<int?>("customerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerCode");
 
-                    b.HasIndex("customersId");
+                    b.HasIndex("customerId");
 
                     b.ToTable("CustomerConsumptions", (string)null);
                 });
@@ -146,6 +146,9 @@ namespace DAL.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActivityId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
@@ -178,10 +181,14 @@ namespace DAL.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ActivityId");
+
+                    b.HasIndex("CustomerCode")
+                        .IsUnique();
 
                     b.ToTable("Customers", (string)null);
                 });
@@ -402,11 +409,22 @@ namespace DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DAL.Entities.Customers", "customers")
+                    b.HasOne("DAL.Entities.Customers", "customer")
                         .WithMany()
-                        .HasForeignKey("customersId");
+                        .HasForeignKey("customerId");
 
-                    b.Navigation("customers");
+                    b.Navigation("customer");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Customers", b =>
+                {
+                    b.HasOne("DAL.Entities.ActivityType", "Activity")
+                        .WithMany()
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Activity");
                 });
 
             modelBuilder.Entity("DAL.Entities.Esdar", b =>

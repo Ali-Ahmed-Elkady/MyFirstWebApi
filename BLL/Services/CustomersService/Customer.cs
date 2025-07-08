@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BLL.Dto;
 using BLL.Helper;
+using BLL.Services.Unified_Response;
 using DAL.Entities;
 using DAL.Repo.Abstraction;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +18,7 @@ namespace BLL.Services.CustomersService
             mapper = Mapper;
             RepoConsumption = repoConsumption;
         }
-        public async Task<(bool, string)> Add(CustomerDto Customer)
+        public async Task<UnifiedResponse<CustomerDto>> Add(CustomerDto Customer)
         {
             try
             {
@@ -25,75 +26,100 @@ namespace BLL.Services.CustomersService
                 {
                     var customer = mapper.Map<Customers>(Customer);
                     await repo.Add(customer);
-                    return (true, "Customer Added Successfully");
+                    return UnifiedResponse<CustomerDto>.SuccessResult(Customer);
                 }
                 throw new Exception("Entity Cannot be Null");
             }
             catch (Exception ex)
             {
-                return (false, ex.Message);
+                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message);
             }
         }
-        public async Task<(bool, string)>Delete(long CustomerCode)
+        public async Task<UnifiedResponse<CustomerDto>> Delete(long CustomerCode)
         {
             try
             {
                 var result = await repo.Get(a => a.CustomerCode == CustomerCode);
-
+                var result2 = mapper.Map<CustomerDto>(result);
                 if (result is null)
-                    throw new Exception("Customer Not Found!");
-               foreach(var item in result)
-                {
-                    item.IsDeleted = true;
-                }
-                await repo.EditRange(result);
-                return (true, "Customer deleted Successfully");
-            }catch(Exception ex)
+                    throw new Exception("Customer Not Found!");              
+                    result.IsDeleted = true; 
+                await repo.Edit(result);
+                return UnifiedResponse<CustomerDto>.SuccessResult(result2);
+            }
+            catch(Exception ex)
             {
-                return (false, ex.Message);
+                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message);
             }
         }
 
-        public async Task<(bool, string)> Edit(CustomerDto Customer)
+        public async Task<UnifiedResponse<CustomerDto>> Edit(CustomerDto Customer)
         {
             try
             {
                 if (Customer is null)
                     throw new Exception("Invalid Customer Data!");
                 var customerCode = Customer.CustomerCode;
-                var ExistingCustomer = GetByCustomerCode(customerCode);
+                var ExistingCustomer = await repo.Get(a=>a.CustomerCode==Customer.CustomerCode);
                 if (ExistingCustomer is null)
                     throw new Exception("Customer not Found!");
-                var customer = mapper.Map<Customers>(Customer);
-                customer.ModifiedAt = DateTime.Now;
-                await repo.Edit(customer);
-                return (true, "user edited Successfully");
+                mapper.Map(Customer, ExistingCustomer);
+                ExistingCustomer.ModifiedAt = DateTime.Now;
+                (bool isSucess ,string message) result =await repo.Edit(ExistingCustomer);
+                if(result.isSucess)
+                return UnifiedResponse<CustomerDto>.SuccessResult(Customer);
+                throw new Exception(result.message);
             }
             catch (Exception ex)
             {
-                return (false, ex.Message);
+                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message);
             }
 
         }
 
-        public async Task<List<CustomerDto>> GetAll()
+        public async Task<UnifiedResponse<List<CustomerDto>>> GetAll()
         {
-            var Customer = await repo.Get();
-            var result = mapper.Map<List<CustomerDto>>(Customer);
-            return result;
+            try
+            {
+                var Customer = await repo.GetAll();
+                if (Customer is null || Customer.Count == 0)
+                    throw new Exception("There is no customers in DB!");
+                var result = mapper.Map<List<CustomerDto>>(Customer);
+                return UnifiedResponse<List<CustomerDto>>.SuccessResult(result);
+            }
+            catch(Exception ex)
+            {
+                return UnifiedResponse<List<CustomerDto>>.ErrorResult(ex.Message);
+            }
         }
 
-        public async Task<List<CustomerDto>> GetByCustomerCode(long CustomerCode)
+        public async Task<UnifiedResponse<CustomerDto>> GetByCustomerCode(long CustomerCode)
         {
-          var Customer = await repo.Get(a => a.CustomerCode == CustomerCode);
-          var result = mapper.Map<List<CustomerDto>>(Customer);
-            return result;
+            try
+            {
+                var Customer = await repo.Get(a => a.CustomerCode == CustomerCode);
+                if (Customer is null)
+                    throw new Exception("No Customer Matches the current Code");
+                var result = mapper.Map<CustomerDto>(Customer);
+                return UnifiedResponse<CustomerDto>.SuccessResult(result);
+            }
+            catch(Exception ex)
+            {
+                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message);
+            }
         }
-        public async Task<bool> Upload(IFormFile file)
+        public async Task<UnifiedResponse<bool>> Upload(IFormFile file)
         {
-            var result = mapper.Map<List<CustomerDto>, List<Customers>>(await file.UploadSheet<CustomerDto>());
-            await repo.AddRange(result);
-            return true;
+            try
+            {
+                var result = mapper.Map<List<CustomerDto>, List<Customers>>(await file.UploadSheet<CustomerDto>());
+                await repo.AddRange(result);
+                return UnifiedResponse<bool>.SuccessResult(true);
+            }
+            catch(Exception ex)
+            {
+                return UnifiedResponse<bool>.ErrorResult(ex.Message);
+            }
         }        
     }
     }

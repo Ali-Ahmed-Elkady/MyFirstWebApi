@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DAL.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class RelationShipBetweenCustomerAndConsumptions : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -23,30 +23,6 @@ namespace DAL.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ActivityTypes", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Customers",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    InstallationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CustomerCode = table.Column<long>(type: "bigint", nullable: false),
-                    Gender = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    MeterNo = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Customers", x => x.Id);
-                    table.UniqueConstraint("AK_Customers_CustomerCode", x => x.CustomerCode);
                 });
 
             migrationBuilder.CreateTable(
@@ -162,6 +138,37 @@ namespace DAL.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Customers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    InstallationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CustomerCode = table.Column<long>(type: "bigint", nullable: false),
+                    Gender = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MeterNo = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    ActivityId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Customers", x => x.Id);
+                    table.UniqueConstraint("AK_Customers_CustomerCode", x => x.CustomerCode);
+                    table.ForeignKey(
+                        name: "FK_Customers_ActivityTypes_ActivityId",
+                        column: x => x.ActivityId,
+                        principalTable: "ActivityTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tariffs",
                 columns: table => new
                 {
@@ -190,7 +197,6 @@ namespace DAL.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CustomerCode = table.Column<long>(type: "bigint", nullable: false),
-                    customersId = table.Column<int>(type: "int", nullable: true),
                     ConsumptionKw = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Month = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -203,11 +209,7 @@ namespace DAL.Migrations
                         principalTable: "Customers",
                         principalColumn: "CustomerCode",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CustomerConsumptions_Customers_customersId",
-                        column: x => x.customersId,
-                        principalTable: "Customers",
-                        principalColumn: "Id");
+                    
                 });
 
             migrationBuilder.CreateTable(
@@ -270,9 +272,15 @@ namespace DAL.Migrations
                 column: "CustomerCode");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CustomerConsumptions_customersId",
-                table: "CustomerConsumptions",
-                column: "customersId");
+                name: "IX_Customers_ActivityId",
+                table: "Customers",
+                column: "ActivityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Customers_CustomerCode",
+                table: "Customers",
+                column: "CustomerCode",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Esdar_CustomerConsumptionsId",

@@ -1,5 +1,6 @@
 ﻿using BLL.Dto;
 using DAL.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 namespace BLL.Services.Users
@@ -8,10 +9,27 @@ namespace BLL.Services.Users
     {
         private readonly UserManager<AppUser> user;
         private readonly SignInManager<AppUser> SignIn;
-        public User(UserManager<AppUser> User , SignInManager<AppUser>signIn)
+        private readonly RoleManager<IdentityRole> role;
+        public User(UserManager<AppUser> User , SignInManager<AppUser>signIn,RoleManager<IdentityRole>Role)
         {
             user = User;
             SignIn = signIn;
+            role = Role;
+        }
+
+        public async Task<bool> AddRoles(string RoleName)
+        {
+            try
+            {
+                if (RoleName is null)
+                    throw new Exception("Name Can not Be null");
+                var result = await role.CreateAsync(new IdentityRole(RoleName));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
         public async Task<bool> AddUsers(string username ,string password)

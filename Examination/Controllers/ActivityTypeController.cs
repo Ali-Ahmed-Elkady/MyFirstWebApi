@@ -20,6 +20,14 @@ public class ActivityTypeController : ControllerBase
         var result = await activity.GetAll();
         return Ok(result);
     }
+    [HttpGet]
+    public async Task<IActionResult> GetByCode(int code)
+    {
+        var result = await activity.GetByCode(code);
+        if (result.Success)
+            return Ok(result);
+            return BadRequest(result);
+    }
     [HttpPost]
     public async Task<IActionResult> AddActivity([FromBody] ActivityTypeDto activity)
     {
@@ -32,12 +40,14 @@ public class ActivityTypeController : ControllerBase
     public async Task<IActionResult> Update(ActivityTypeDto Activity)
     {
         var result = await activity.Edit(Activity);
+        if (result.Success)
         return Ok(result);
+        return BadRequest(result);
     }
     [HttpDelete]
-    public async Task<IActionResult> Delete(ActivityTypeDto Activity)
+    public async Task<IActionResult> Delete(int code)
     {
-        var result = await activity.Delete(Activity);
+        var result = await activity.Delete(code);
         if (result.Success)
             return Ok(result);
         return BadRequest(result);

@@ -29,11 +29,11 @@ namespace BLL.Services.TariffService
                 if (tariff is null)
                     throw new Exception("Invalid Tariff Data!");
                 var Tariff = tariff.TariffId;
-                var ExistingTariff = repo.Get(a=>a.Id == Tariff);
+                var ExistingTariff =await steps.Get(a=>a.Id == Tariff);
                 if (ExistingTariff is null)
                     throw new Exception("Tariff not Found!");
-                var Tariffs = mapper.Map<TariffSteps>(tariff);
-                await steps.Edit(Tariffs);
+                 mapper.Map(tariff,ExistingTariff);
+                await steps.Edit(ExistingTariff);
                 return (true, "user edited Successfully");
             }
             catch (Exception ex)
@@ -48,7 +48,7 @@ namespace BLL.Services.TariffService
                 var exists = await steps.Get(a=>a.Id == id);
                 if (exists is null)
                     throw new Exception("Tariff Steps not Found in DB!");
-                var result = steps.Delete(id);
+                var result = steps.Delete(exists);
                 return (true, "Tariff Step Removed Successfully");
             }
             catch (Exception ex)

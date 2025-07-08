@@ -1,6 +1,7 @@
 ﻿using DAL.DataBase;
 using DAL.Repo.Abstraction;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq.Expressions;
 
 namespace DAL.Repo.Implementation
@@ -25,9 +26,9 @@ namespace DAL.Repo.Implementation
                       return (true, "entity added successfully");
             }
              catch (Exception ex)
-            {
+             {
                 return (false, $"Error {ex.Message}");
-            }
+             }
         }
 
         public async Task<(bool, string)> AddRange(List<T> values)
@@ -45,13 +46,12 @@ namespace DAL.Repo.Implementation
             }
         }
 
-        public async Task<(bool, string)> Delete(long id)
+        public async Task<(bool, string)> Delete(T entity)
         {
             try
             {
-                var result = await dbset.FindAsync(id);
-                if (result == null) throw new Exception("Element Not Found!");
-                dbset.Remove(result);
+                
+                dbset.Remove(entity);
                 await context.SaveChangesAsync();
                 return (true, "Element Deleted successfully!");
             }
@@ -97,7 +97,15 @@ namespace DAL.Repo.Implementation
             }
         }
 
-        public async Task<List<T>> Get(Expression<Func<T,bool>>? predicate = null)
+        public async Task<T> Get(Expression<Func<T, bool>> predicate)
+        {
+            var result = await dbset.FirstOrDefaultAsync(predicate);
+            if (result is null)
+                throw new Exception("No data found in DB!");
+            return result;
+        }
+
+        public async Task<List<T>> GetAll(Expression<Func<T,bool>>? predicate = null)
         {
             if (predicate is null)
             {

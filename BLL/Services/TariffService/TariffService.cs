@@ -8,15 +8,17 @@ namespace BLL.Services.TariffService
 {
     public partial class TariffService : ITariffService
     {
+        private readonly IRepo<ActivityType> ActivityRepo;
         private readonly IRepo<Tariff> repo;
         private readonly IRepo<TariffSteps> steps;
         private readonly IMapper mapper;
       
-        public TariffService(IRepo<Tariff> Repo, IMapper Mapper, IRepo<TariffSteps> steps)
+        public TariffService(IRepo<Tariff> Repo, IMapper Mapper, IRepo<TariffSteps> steps, IRepo<ActivityType> activityRepo)
         {
             repo = Repo;
             mapper = Mapper;
             this.steps = steps;
+            ActivityRepo = activityRepo;
         }
         public async Task<UnifiedResponse<TariffDto>> Add(TariffDto tariff)
         {
@@ -24,11 +26,13 @@ namespace BLL.Services.TariffService
             {
                 if (tariff != null)
                 {
+                    var Activity =await ActivityRepo.Get(a => a.Code == tariff.ActivityTypeId);
+                    tariff.ActivityTypeId = Activity.Id;
                     var Tariff = mapper.Map<Tariff>(tariff);
                     (bool isSucess ,string message) result = await repo.Add(Tariff);
                     if(result.isSucess)
                     return UnifiedResponse<TariffDto>.SuccessResult(tariff,"tariff added successfully");
-                    return UnifiedResponse<TariffDto>.ErrorResult("An Error Happend While Adding Tariff");
+                    return UnifiedResponse<TariffDto>.ErrorResult("An Error Happened While Adding Tariff");
                 }
                 return UnifiedResponse<TariffDto>.ErrorResult("Tariff cannot be null");
             }
@@ -45,7 +49,7 @@ namespace BLL.Services.TariffService
                 var exists = await repo.Get(a => a.Id == code);
                 if (exists is null)
                     throw new Exception("Tariff not Found in DB!");
-                var result = repo.Delete(code);
+                var result = repo.Delete(exists);
                 return (true, "Tariff Removed Successfully");
             }
             catch(Exception ex)
@@ -60,12 +64,11 @@ namespace BLL.Services.TariffService
             {
                 if (tariff is null)
                     throw new Exception("Invalid Tariff Data!");
-                var Tariff = tariff.ActivityTypeId;
-                var ExistingTariff = repo.Get();
+                var ExistingTariff =await repo.Get(a=>a.ActivityTypeId==tariff.ActivityTypeId);
                 if (ExistingTariff is null)
                     throw new Exception("Tariff not Found!");
-                var Tariffs = mapper.Map<Tariff>(tariff);
-                await repo.Edit(Tariffs);
+                 mapper.Map(tariff,ExistingTariff);
+                await repo.Edit(ExistingTariff);
                 return (true, "user edited Successfully");
             }
             catch (Exception ex)

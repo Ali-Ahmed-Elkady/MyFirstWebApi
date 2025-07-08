@@ -7,8 +7,8 @@ namespace BLL.Services.ActivityTypeService
     {
         public Task<UnifiedResponse<ActivityTypeDto>> Add(ActivityTypeDto Customer);
         public Task<UnifiedResponse<ActivityTypeDto>> Edit(ActivityTypeDto Customer);
-        public Task<UnifiedResponse<ActivityTypeDto>> Delete(ActivityTypeDto activity);
-        public Task<List<ActivityTypeDto>> GetByCode(int Code);
-        public Task<List<ActivityTypeDto>> GetAll();
+        public Task<UnifiedResponse<(bool, string)>> Delete(int code);
+        public Task<UnifiedResponse<ActivityTypeDto>> GetByCode(int Code);
+        public Task<UnifiedResponse<List<ActivityTypeDto>>> GetAll();
     }
 }

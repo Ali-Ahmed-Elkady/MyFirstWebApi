@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace BLL.Dto
+﻿namespace BLL.Dto
 {
    public class UserDto
    {

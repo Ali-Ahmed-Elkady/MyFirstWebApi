@@ -1,5 +1,6 @@
 ﻿using BLL.Dto;
 using BLL.Helper;
+using BLL.Services.Unified_Response;
 using DAL.Entities;
 using Microsoft.AspNetCore.Http;
 
@@ -7,7 +8,7 @@ namespace BLL.Services.CustomersService
 {
     public partial class Customer
     {  
-        public async Task<(bool, string)> AddConsumption(CustomerConsumptionDTO CustomerConsumption)
+        public async Task<UnifiedResponse<CustomerConsumptionDTO>> AddConsumption(CustomerConsumptionDTO CustomerConsumption)
         {
             try
             {
@@ -15,13 +16,13 @@ namespace BLL.Services.CustomersService
                 {
                     var customerConsumption = mapper.Map<CustomerConsumptions>(CustomerConsumption);
                     await RepoConsumption.Add(customerConsumption);
-                    return (true, "Customer Added Successfully");
+                    return UnifiedResponse<CustomerConsumptionDTO>.SuccessResult(CustomerConsumption);
                 }
                 throw new Exception("Entity Cannot be Null");
             }
             catch (Exception ex)
             {
-                return (false, ex.Message);
+                return UnifiedResponse<CustomerConsumptionDTO>.ErrorResult(ex.Message);
             }
         }
         public async Task<bool> UploadConsumption(IFormFile file)
@@ -30,38 +31,55 @@ namespace BLL.Services.CustomersService
             await RepoConsumption.AddRange(result);
             return true;
         }
-        public async Task<List<CustomerConsumptionDTO>> GetCustomerConsumptions(long CustomerCode)
-        {
-            var Customer = await RepoConsumption.Get(a => a.CustomerCode == CustomerCode);
-            var result = mapper.Map<List<CustomerConsumptionDTO>>(Customer);
-            return result;
-        }
-        public async Task<List<CustomerConsumptionDTO>> GetAllConsumptions()
-        {
-            var Customer = await RepoConsumption.Get();
-            var result = mapper.Map<List<CustomerConsumptionDTO>>(Customer);
-            return result;
-        }
-        public async Task<(bool, string)> EditConsumption(CustomerConsumptionDTO Customer)
+        public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> GetCustomerConsumptions(long CustomerCode)
         {
             try
             {
-                if (Customer is null)
-                    throw new Exception("Invalid Customer Data!");
-                var customerCode = Customer.CustomerCode;
-                var ExistingCustomer = GetCustomerConsumptions(customerCode);
-                if (ExistingCustomer is null)
-                    throw new Exception("Customer not Found!");
-                var customer = mapper.Map<CustomerConsumptions>(Customer);
-                await RepoConsumption.Edit(customer);
-                return (true, "user edited Successfully");
-            }
-            catch (Exception ex)
+                var CustomerConsumptions = await RepoConsumption.GetAll(a => a.CustomerCode == CustomerCode);
+                if (CustomerConsumptions is null || CustomerConsumptions.Count == 0)
+                    throw new Exception("Customer has no consumptions");
+                var result = mapper.Map<List<CustomerConsumptionDTO>>(CustomerConsumptions);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(result);
+            }catch(Exception ex)
             {
-                return (false, ex.Message);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message);
             }
         }
-        public async Task<(bool, string)> DeleteConsumptions(long CustomerCode)
+        public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> GetAllConsumptions()
+        {
+            try
+            {
+                var Customer = await RepoConsumption.GetAll();
+                if (Customer is null || Customer.Count == 0)
+                    throw new Exception("There is no Consumptions In DataBase");
+                var result = mapper.Map<List<CustomerConsumptionDTO>>(Customer);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(result);
+            }
+            catch(Exception ex)
+            {
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message);
+            }
+        }
+        //public async Task<UnifiedResponse<CustomerConsumptionDTO>> EditConsumption(CustomerConsumptionDTO Customer)
+        //{
+        //    try
+        //    {
+        //        if (Customer is null)
+        //            throw new Exception("Invalid Customer Data!");
+        //        var ExistingCustomer = repo.Get(a => a.CustomerCode == Customer.CustomerCode);
+        //        if(ExistingCustomer is null)
+        //            throw new Exception("Customer not Found!");
+        //        var customerConsumptions = RepoConsumption.GetAll(a => a.CustomerCode == Customer.CustomerCode);
+        //        var customer = mapper.Map<CustomerConsumptions>(Customer);
+        //        var result =await RepoConsumption.Edit(customer);
+        //        return UnifiedResponse<CustomerConsumptionDTO>.SuccessResult(customer);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return UnifiedResponse<CustomerConsumptionDTO>.ErrorResult(ex.Message);
+        //    }
+        //}
+        public async Task<UnifiedResponse<bool>> DeleteConsumptions(long CustomerCode)
         {
             try
             {
@@ -69,13 +87,13 @@ namespace BLL.Services.CustomersService
 
                 if (result is null)
                     throw new Exception("Customer Not Found!");
-                await RepoConsumption.Delete(CustomerCode);
+                var response = await RepoConsumption.Delete(result);
                 
-                return (true, "Customer deleted Successfully");
+                return UnifiedResponse<bool>.SuccessResult(true);
             }
             catch (Exception ex)
             {
-                return (false, ex.Message);
+                return UnifiedResponse<bool>.ErrorResult(ex.Message);
             }
         }
     }

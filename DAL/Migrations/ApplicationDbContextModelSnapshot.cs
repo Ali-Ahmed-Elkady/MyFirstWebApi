@@ -115,6 +115,9 @@ namespace DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("ConsumptionAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("ConsumptionKw")
                         .HasColumnType("decimal(18,2)");
 
@@ -124,14 +127,14 @@ namespace DAL.Migrations
                     b.Property<DateTime>("Month")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("customersId")
+                    b.Property<int?>("customerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerCode");
 
-                    b.HasIndex("customersId");
+                    b.HasIndex("customerId");
 
                     b.ToTable("CustomerConsumptions", (string)null);
                 });
@@ -183,6 +186,9 @@ namespace DAL.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ActivityId");
+
+                    b.HasIndex("CustomerCode")
+                        .IsUnique();
 
                     b.ToTable("Customers", (string)null);
                 });
@@ -403,11 +409,11 @@ namespace DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DAL.Entities.Customers", "customers")
+                    b.HasOne("DAL.Entities.Customers", "customer")
                         .WithMany()
-                        .HasForeignKey("customersId");
+                        .HasForeignKey("customerId");
 
-                    b.Navigation("customers");
+                    b.Navigation("customer");
                 });
 
             modelBuilder.Entity("DAL.Entities.Customers", b =>
