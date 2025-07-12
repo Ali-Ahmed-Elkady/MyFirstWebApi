@@ -1,20 +1,27 @@
 ﻿using BLL.Dto;
 using DAL.Entities;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 namespace BLL.Services.Users
 {
-   public class User : IUser
+    public class User : IUser
     {
         private readonly UserManager<AppUser> user;
         private readonly SignInManager<AppUser> SignIn;
         private readonly RoleManager<IdentityRole> role;
-        public User(UserManager<AppUser> User , SignInManager<AppUser>signIn,RoleManager<IdentityRole>Role)
+        private readonly IConfiguration configuration;
+        public User(UserManager<AppUser> User, SignInManager<AppUser> signIn, RoleManager<IdentityRole> Role, IConfiguration configuration)
         {
             user = User;
             SignIn = signIn;
             role = Role;
+            this.configuration = configuration;
         }
 
         public async Task<bool> AddRoles(string RoleName)
@@ -32,12 +39,12 @@ namespace BLL.Services.Users
             }
         }
 
-        public async Task<bool> AddUsers(string username ,string password)
+        public async Task<bool> AddUsers(string username, string password)
         {
             if (string.IsNullOrWhiteSpace(username))
             {
                 throw new Exception("Email cannot be empty");
-                
+
             }
 
             var AppsUser = new AppUser
@@ -50,11 +57,11 @@ namespace BLL.Services.Users
             var result = await user.CreateAsync(AppsUser, password);
             if (result.Succeeded) return true;
             return false;
-            
+
         }
 
         public async Task<bool> DeleteUser(string Id)
-        { 
+        {
             var result = await user.FindByIdAsync(Id);
             if (result is null)
             {
@@ -70,9 +77,9 @@ namespace BLL.Services.Users
         }
         // take the parameters as object not props 
         //split the edit function into two one for the user the other for update password 
-        public async Task<bool> EditUser(UserDto user1) 
+        public async Task<bool> EditUser(UserDto user1)
         {
-           
+
             var User = await user.FindByNameAsync(user1.username);
             if (User is null)
             {
@@ -93,7 +100,8 @@ namespace BLL.Services.Users
                     throw new Exception("User update failed: " + string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
                 return true;
-            }throw new Exception("User Is Deleted Cannot Be edited ");
+            }
+            throw new Exception("User Is Deleted Cannot Be edited ");
         }
 
         public async Task<List<AppUser>> GetAll()
@@ -101,21 +109,50 @@ namespace BLL.Services.Users
             return await user.Users.ToListAsync();
         }
 
-        public async Task<bool> Login(string username, string password)
+        public async Task<bool> Login(string username, string password) 
         {
-            var result = await user.FindByNameAsync(username);
-            if (result == null)
+            try
             {
-                throw new Exception("user not found");
+                var result = await user.FindByNameAsync(username);
+                if (result == null)
+                {
+                    throw new Exception("user not found");
+                }
+                if (await user.CheckPasswordAsync(result, password))
+                {
+                    var claims = new List<Claim>();
+                    claims.Add(new Claim(ClaimTypes.Name, result.UserName));
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, result.Id));
+                    claims.Add(new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
+                    var roles = await user.GetRolesAsync(result);
+                    foreach (var item in roles)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, item.ToString()));
+                    }
+                    var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]));
+                    var SC = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                    var token = new JwtSecurityToken(
+                        issuer: configuration["JWT:Issuer"],
+                        audience: configuration["JWT:Audience"],
+                        claims: claims,
+                        expires: DateTime.Now.AddMinutes(30),
+                        signingCredentials :SC
+                        
+                    );
+                    var _token = new
+                    {
+                        Token = new JwtSecurityTokenHandler().WriteToken(token),
+                        expiration = token.ValidTo
+                    };
+                    return _token;
+                }
+                return false;
             }
-            var result2 =await SignIn.PasswordSignInAsync(result, password, false,false);
-            if (result2.Succeeded)
+            catch (Exception ex)
             {
-              
-                return true;
+                throw new Exception("Login failed: " + ex.Message);
+
             }
-            return false;
-           
         }
     }
 }
