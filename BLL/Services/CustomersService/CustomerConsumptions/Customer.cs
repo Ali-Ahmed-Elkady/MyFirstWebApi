@@ -2,12 +2,15 @@
 using BLL.Helper;
 using BLL.Services.Unified_Response;
 using DAL.Entities;
+using DAL.Repo.Abstraction;
 using Microsoft.AspNetCore.Http;
 
 namespace BLL.Services.CustomersService
 {
     public partial class Customer
-    {  
+    {
+        private readonly IRepo<Tariff> repoTariff;
+        private readonly IRepo<TariffSteps> repoSteps;
         public async Task<UnifiedResponse<CustomerConsumptionDTO>> AddConsumption(CustomerConsumptionDTO CustomerConsumption)
         {
             try
@@ -15,6 +18,7 @@ namespace BLL.Services.CustomersService
                 if (CustomerConsumption != null)
                 {
                     var customerConsumption = mapper.Map<CustomerConsumptions>(CustomerConsumption);
+                    customerConsumption.ConsumptionAmount = await CalculateConsumptions(CustomerConsumption);
                     await RepoConsumption.Add(customerConsumption);
                     return UnifiedResponse<CustomerConsumptionDTO>.SuccessResult(CustomerConsumption);
                 }
@@ -94,6 +98,96 @@ namespace BLL.Services.CustomersService
             catch (Exception ex)
             {
                 return UnifiedResponse<bool>.ErrorResult(ex.Message);
+            }
+        }
+        public async Task<decimal> CalculateConsumptions(CustomerConsumptionDTO Customer)
+        {
+            try
+            {
+                var customer = await repo.Get(a => a.CustomerCode == Customer.CustomerCode);
+                if (customer == null)
+                    throw new Exception("Customer not found in database");
+
+                var tariff = await repoTariff.Get(a => a.ActivityTypeId == customer.ActivityId);
+                if (tariff == null)
+                    throw new Exception("No tariff assigned to this activity");
+
+                var tariffSteps = (await repoSteps.GetAll(a => a.TariffId == tariff.Id))
+                    .OrderBy(s => s.From)
+                    .ToList();
+
+                decimal remainingKW = Customer.ConsumptionKw;
+                decimal totalAmount = 0.0m;
+
+                foreach (var step in tariffSteps)
+                {
+                    decimal stepSize = step.To - step.From + 1;
+
+                    if (remainingKW <= 0)
+                        break;
+
+                    if (remainingKW > stepSize)
+                    {
+                        totalAmount += (stepSize * step.Price) + step.RecalculationAddedAmount;
+                        remainingKW -= stepSize;
+                    }
+                    else
+                    {
+                        totalAmount += (remainingKW * step.Price) + step.RecalculationAddedAmount + step.ServicePrice;
+                        remainingKW = 0;
+                        break;
+                    }
+                }
+
+                return totalAmount;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error calculating consumption cost: {ex.Message}");
+            }
+        }
+        public async Task<(decimal,decimal)> CalculateConsumptions(int ConsumptionKw , int ActivityCode)
+        {
+            try
+            {
+                var tariff = await repoTariff.Get(a => a.ActivityTypeId == ActivityCode);
+                if (tariff == null)
+                    throw new Exception("No tariff assigned to this activity");
+
+                var tariffSteps = (await repoSteps.GetAll(a => a.TariffId == tariff.Id))
+                    .OrderBy(s => s.From)
+                    .ToList();
+
+                decimal remainingKW = ConsumptionKw;
+                decimal totalAmount = 0.0m;
+                var BureConsumption = 0.0m;
+
+                foreach (var step in tariffSteps)
+                {
+                    decimal stepSize = step.To - step.From + 1;
+
+                    if (remainingKW <= 0)
+                        break;
+
+                    if (remainingKW > stepSize)
+                    {
+                        totalAmount += (stepSize * step.Price) + step.RecalculationAddedAmount;
+                        remainingKW -= stepSize;
+                    }
+                    else
+                    {
+                        totalAmount += (remainingKW * step.Price) + step.RecalculationAddedAmount + step.ServicePrice;
+                         BureConsumption = totalAmount - step.ServicePrice;
+                        remainingKW = 0;
+                        break;
+                    }
+                }
+
+                return (totalAmount,BureConsumption);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error calculating consumption cost: {ex.Message}");
             }
         }
     }

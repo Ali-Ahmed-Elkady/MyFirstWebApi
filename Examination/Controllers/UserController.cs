@@ -1,5 +1,6 @@
 ﻿using BLL.Dto;
 using BLL.Services.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Examination.Controllers
@@ -15,6 +16,7 @@ namespace Examination.Controllers
             user = User;
         }
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAllUsers()
         {
             var result = await user.GetAll();
@@ -53,7 +55,7 @@ namespace Examination.Controllers
         public async Task<IActionResult> Login (string username ,string password)
         {
           var result = await user.Login(username, password);
-            if (result) return Ok("login successfully");
+            return Ok(result);
             return BadRequest("password not correct");
         }
 

@@ -13,7 +13,7 @@ namespace Examination
             //add identity service 
             builder.Services.AddIdentityDependencyInjection();
             //add jwt services 
-            builder.Services.AddJWT();
+            builder.Services.AddJWT(builder.Configuration);
             builder.Services.AddScopedServices();
             builder.Services.AddControllers();
             builder.Services.AddAutoMapper(typeof(AutoMapperProfile));

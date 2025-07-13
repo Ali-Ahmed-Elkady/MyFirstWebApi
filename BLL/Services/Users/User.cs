@@ -1,7 +1,6 @@
 ﻿using BLL.Dto;
+using BLL.Services.Unified_Response;
 using DAL.Entities;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -109,7 +108,7 @@ namespace BLL.Services.Users
             return await user.Users.ToListAsync();
         }
 
-        public async Task<bool> Login(string username, string password) 
+        public async Task<UnifiedResponse<AuthTokenDto>> Login(string username, string password)
         {
             try
             {
@@ -139,14 +138,14 @@ namespace BLL.Services.Users
                         signingCredentials :SC
                         
                     );
-                    var _token = new
+                    AuthTokenDto _token = new AuthTokenDto
                     {
-                        Token = new JwtSecurityTokenHandler().WriteToken(token),
-                        expiration = token.ValidTo
+                        Token = new JwtSecurityTokenHandler().WriteToken(token) ,
+                        Expiry = token.ValidTo 
                     };
-                    return _token;
+                    return UnifiedResponse<AuthTokenDto>.SuccessResult(_token);
                 }
-                return false;
+                return UnifiedResponse<AuthTokenDto>.ErrorResult("Error");
             }
             catch (Exception ex)
             {

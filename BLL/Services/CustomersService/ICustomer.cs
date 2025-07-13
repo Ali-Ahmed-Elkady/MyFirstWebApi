@@ -18,6 +18,8 @@ namespace BLL.Services.CustomersService
         public Task<UnifiedResponse<List<CustomerConsumptionDTO>>> GetCustomerConsumptions(long CustomerCode);
         public Task<UnifiedResponse<List<CustomerConsumptionDTO>>> GetAllConsumptions();
         public Task<UnifiedResponse<bool>> DeleteConsumptions(long CustomerCode);
+        public Task<decimal> CalculateConsumptions(CustomerConsumptionDTO Customer);
+        public Task<(decimal,decimal)> CalculateConsumptions(int ConsumptionKw, int ActivityCode);
         //public Task<UnifiedResponse<CustomerConsumptionDTO>> EditConsumption(CustomerConsumptionDTO Customer);
     }
 }

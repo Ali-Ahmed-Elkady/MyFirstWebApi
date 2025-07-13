@@ -11,7 +11,16 @@ namespace BLL.Services.TariffService
             {
                 if (tariff != null)
                 {
+                    var CurrentTariff = await repo.Get(a => a.Id == tariff.TariffId);
+                    var Activity = await ActivityRepo.Get(a => a.Code == CurrentTariff.ActivityTypeId);
                     var Tariff = mapper.Map<TariffSteps>(tariff);
+                    
+                    if (tariff.IsRecalculated)
+                    {
+                        Tariff.RecalculationEdge = tariff.From -1;
+                        (decimal Total ,decimal bure) result = await customer.CalculateConsumptions(Tariff.RecalculationEdge,Activity.Code);
+                        Tariff.RecalculationAddedAmount = (Tariff.RecalculationEdge * tariff.Price)-(result.bure);
+                    }                  
                     await steps.Add(Tariff);
                     return (true, "Tariff Step Added Successfully");
                 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BLL.Dto;
+using BLL.Services.CustomersService;
 using BLL.Services.Unified_Response;
 using DAL.Entities;
 using DAL.Repo.Abstraction;
@@ -12,14 +13,15 @@ namespace BLL.Services.TariffService
         private readonly IRepo<Tariff> repo;
         private readonly IRepo<TariffSteps> steps;
         private readonly IMapper mapper;
+        private readonly ICustomer customer;
       
-        public TariffService(IRepo<Tariff> Repo, IMapper Mapper, IRepo<TariffSteps> steps, IRepo<ActivityType> activityRepo)
+        public TariffService(IRepo<Tariff> Repo, IMapper Mapper, IRepo<TariffSteps> steps, IRepo<ActivityType> activityRepo ,ICustomer customer)
         {
             repo = Repo;
             mapper = Mapper;
             this.steps = steps;
             ActivityRepo = activityRepo;
-        }
+            this.customer = customer;       }
         public async Task<UnifiedResponse<TariffDto>> Add(TariffDto tariff)
         {
             try

@@ -7,8 +7,6 @@
         public decimal Price { get; set; }
         public decimal ServicePrice { get; set; }
         public bool IsRecalculated { get; set; }
-        public int RecalculationEdge { get; set; }
-        public decimal RecalculationAddedAmount { get; set; }
         public int TariffId { get; set; }
     }
 }

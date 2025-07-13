@@ -2,13 +2,18 @@
 {
     public static class AddAuthentication
     {
-        public static IServiceCollection AddJWT(this IServiceCollection services)
+        public static IServiceCollection AddJWT(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddAuthentication(a =>
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"])
+            );
+
+            services.AddAuthentication(options =>
             {
-                a.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                a.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
             {
                 options.RequireHttpsMetadata = false;
                 options.SaveToken = true;
@@ -18,12 +23,14 @@
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = "Ali",
-                    ValidAudience = "users",
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("123456"))
+                    ValidIssuer = configuration["JWT:Issuer"],
+                    ValidAudience = configuration["JWT:Audience"],
+                    IssuerSigningKey = key
                 };
             });
+
             return services;
         }
+
     }
 }

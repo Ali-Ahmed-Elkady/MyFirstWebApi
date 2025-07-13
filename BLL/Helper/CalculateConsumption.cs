@@ -11,7 +11,7 @@ namespace BLL.Helper
         private readonly IRepo<TariffSteps> repoSteps;
         public CalculateConsumption(IRepo<Customers> repo, IRepo<Tariff> repoTariff, IRepo<TariffSteps> repoSteps)
         {
-            this.repo = repo;
+            this.repo = repo;   
             this.repoTariff = repoTariff;
             this.repoSteps = repoSteps;
         }
@@ -48,7 +48,7 @@ namespace BLL.Helper
                     }
                     else
                     {
-                        totalAmount += (remainingKW * step.Price) + step.RecalculationAddedAmount;
+                        totalAmount += (remainingKW * step.Price) + step.RecalculationAddedAmount+step.ServicePrice;
                         remainingKW = 0;
                         break;
                     }

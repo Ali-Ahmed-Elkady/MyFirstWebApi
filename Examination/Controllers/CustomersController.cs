@@ -1,5 +1,7 @@
 ﻿using BLL.Dto;
 using BLL.Services.CustomersService;
+using BLL.Services.Unified_Response;
+using DAL.Repo.Implementation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Examination.Controllers
@@ -96,6 +98,20 @@ namespace Examination.Controllers
             if (result.Success)
                 return Ok(result);
             return BadRequest(result);
+        }
+        [HttpPost]
+        public async Task<IActionResult> CalculateConsumption (CustomerConsumptionDTO consumption)
+        {
+            try
+            {
+                var result = await customers.CalculateConsumptions(consumption);
+                return Ok(new { Consumption = result });
+
+            }
+            catch (Exception ex)
+            {
+               return BadRequest(ex.Message);
+            }
         }
     }
 }
