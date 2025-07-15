@@ -1,11 +1,13 @@
 ﻿using BLL.Dto;
 using BLL.Services.TariffService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Examination.Controllers
 {
     [ApiController]
     [Route("[controller]/[action]")]
+    [Authorize]
     public class TariffController : Controller
     {
         private readonly ITariffService service;

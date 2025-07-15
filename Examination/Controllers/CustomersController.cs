@@ -1,13 +1,13 @@
 ﻿using BLL.Dto;
 using BLL.Services.CustomersService;
-using BLL.Services.Unified_Response;
-using DAL.Repo.Implementation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Examination.Controllers
 {
     [ApiController]
-    [Route("[action]")]  
+    [Route("[action]")]
+    [Authorize]
     public class CustomersController : Controller
     {
         private readonly ICustomer customers;
@@ -24,6 +24,7 @@ namespace Examination.Controllers
             return BadRequest(response.Message);
         }
         [HttpGet]
+        
         public async Task<IActionResult> GetByCustomerCode(long customerCode)
         {
             var result = await customers.GetByCustomerCode(customerCode);
@@ -32,20 +33,31 @@ namespace Examination.Controllers
             return BadRequest(result);
         }
         [HttpPost]
+        
         public async Task<IActionResult> AddCustomer([FromBody] CustomerDto customer)
         {
             if (customer == null)
             {
                 return BadRequest("Invalid customer data.");
             }
-
-            var response = await customers.Add(customer);
-            return Ok(response);
+            var userName = User.Identity?.Name;
+            if (userName is null)
+                return BadRequest("User Name Cannot be null");
+            var response = await customers.Add(customer , userName);
+            if (response.Success)
+            {
+                return Ok(response);
+            }
+            return BadRequest(response.Message);
         }
         [HttpPut]
         public async Task<IActionResult> EditCustomer(CustomerDto customer)
         {
-            var response = await customers.Edit(customer);
+
+            var UserName = User.Identity?.Name;
+            if (UserName is null)
+                return BadRequest("User Name Cannot be null");
+            var response = await customers.Edit(customer,UserName);
             if(response.Success)
             return Ok(response);
             return BadRequest(response.Message);

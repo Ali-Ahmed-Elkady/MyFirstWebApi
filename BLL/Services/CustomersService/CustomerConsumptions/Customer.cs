@@ -29,11 +29,19 @@ namespace BLL.Services.CustomersService
                 return UnifiedResponse<CustomerConsumptionDTO>.ErrorResult(ex.Message);
             }
         }
-        public async Task<bool> UploadConsumption(IFormFile file)
+        public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> UploadConsumption(IFormFile file)
         {
-            var result = mapper.Map<List<CustomerConsumptionDTO>, List<CustomerConsumptions>>(await file.UploadSheet<CustomerConsumptionDTO>());
-            await RepoConsumption.AddRange(result);
-            return true;
+            try
+            {
+                var UploadedCustomers = await file.UploadSheet<CustomerConsumptionDTO>();
+                var result = mapper.Map<List<CustomerConsumptionDTO>, List<CustomerConsumptions>>(UploadedCustomers);
+                await RepoConsumption.AddRange(result);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(UploadedCustomers);
+            }
+            catch (Exception ex)
+            {
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message);
+            }
         }
         public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> GetCustomerConsumptions(long CustomerCode)
         {
@@ -153,7 +161,10 @@ namespace BLL.Services.CustomersService
                 var tariff = await repoTariff.Get(a => a.ActivityTypeId == ActivityCode);
                 if (tariff == null)
                     throw new Exception("No tariff assigned to this activity");
-
+                if(ConsumptionKw == 0)
+                {
+                    return (tariff.ZeroReading,tariff.ZeroReading);
+                }
                 var tariffSteps = (await repoSteps.GetAll(a => a.TariffId == tariff.Id))
                     .OrderBy(s => s.From)
                     .ToList();

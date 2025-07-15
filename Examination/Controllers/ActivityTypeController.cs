@@ -1,10 +1,11 @@
 ﻿using BLL.Dto;
 using BLL.Services.ActivityTypeService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("[controller]/[action]")]
-
+[Authorize]
 public class ActivityTypeController : ControllerBase
 {
     private readonly IActivityTypeService activity;

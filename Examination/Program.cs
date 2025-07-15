@@ -1,4 +1,4 @@
-using BLL.Mapper;
+﻿using BLL.Mapper;
 
 namespace Examination
 {
@@ -18,7 +18,8 @@ namespace Examination
             builder.Services.AddControllers();
             builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwagger();
+
 
             var app = builder.Build();
             // Configure the HTTP request pipeline.

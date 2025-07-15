@@ -1,7 +1,11 @@
-﻿namespace BLL.Services.Unified_Response
+﻿using System.Net;
+
+namespace BLL.Services.Unified_Response
 {
     public class UnifiedResponse<T>
     {
+        public HttpStatusCode StatusCode { get; set; }
+        public List<string> Errors { get; set; } = new List<string>();
         public bool Success { get; set; }
         public string? Message { get; set; }
         public T? Data { get; set; }

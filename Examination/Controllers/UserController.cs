@@ -7,7 +7,7 @@ namespace Examination.Controllers
 {
     [ApiController]
     [Route("[action]")]
-    
+    [Authorize]
     public class UserController : Controller
     {
         private readonly IUser user;
@@ -16,7 +16,6 @@ namespace Examination.Controllers
             user = User;
         }
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetAllUsers()
         {
             var result = await user.GetAll();
@@ -35,6 +34,7 @@ namespace Examination.Controllers
             return BadRequest("user Cannot be deleted");
         }
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Register(string username, string password)
         {
              var result = await user.AddUsers(username, password);
@@ -52,11 +52,14 @@ namespace Examination.Controllers
             return BadRequest("Error");
         }
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Login (string username ,string password)
         {
           var result = await user.Login(username, password);
-            return Ok(result);
-            return BadRequest("password not correct");
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+            
         }
 
     }

@@ -4,11 +4,6 @@ namespace DAL.Entities
 {
     public class Customers 
     {
-        public Customers()
-        {
-            CreatedAt = DateTime.Now;
-            IsDeleted = false;
-        }
         public int Id { get; set; }
         public string? Name { get; set; }
         public string? Address { get; set; }
@@ -26,9 +21,16 @@ namespace DAL.Entities
         public List<CustomerConsumptions> Consumptions { get; set; }
         public int ActivityId { get; set; }
         public ActivityType Activity { get; set; }
-        public void UpdateTimestamp()
+        public void Update(string UserName)
         {
-            ModifiedAt = DateTime.Now; 
+            ModifiedAt = DateTime.Now;
+            ModifiedBy = UserName;
+        }
+        public void Create(string UserName)
+        {
+            CreatedAt = DateTime.Now;
+            CreatedBy = UserName;
+            IsDeleted = false;
         }
 
     }

@@ -20,13 +20,14 @@ namespace BLL.Services.CustomersService
             repoTariff = tariff;
             repoSteps = steps;
         }
-        public async Task<UnifiedResponse<CustomerDto>> Add(CustomerDto Customer)
+        public async Task<UnifiedResponse<CustomerDto>> Add(CustomerDto Customer , string UserName)
         {
             try
             {
-                if (Customer != null)
+                if (Customer != null&& UserName !=null)
                 {
                     var customer = mapper.Map<Customers>(Customer);
+                    customer.Create(UserName);
                     await repo.Add(customer);
                     return UnifiedResponse<CustomerDto>.SuccessResult(Customer);
                 }
@@ -55,7 +56,7 @@ namespace BLL.Services.CustomersService
             }
         }
 
-        public async Task<UnifiedResponse<CustomerDto>> Edit(CustomerDto Customer)
+        public async Task<UnifiedResponse<CustomerDto>> Edit(CustomerDto Customer , string UserName)
         {
             try
             {
@@ -66,7 +67,7 @@ namespace BLL.Services.CustomersService
                 if (ExistingCustomer is null)
                     throw new Exception("Customer not Found!");
                 mapper.Map(Customer, ExistingCustomer);
-                ExistingCustomer.ModifiedAt = DateTime.Now;
+                ExistingCustomer.Update(UserName);
                 (bool isSucess ,string message) result =await repo.Edit(ExistingCustomer);
                 if(result.isSucess)
                 return UnifiedResponse<CustomerDto>.SuccessResult(Customer);
