@@ -30,7 +30,7 @@ namespace Examination.Controllers
             var result = await customers.GetByCustomerCode(customerCode);
             if(result.Success)
             return Ok(result);
-            return BadRequest(result);
+            return NotFound(result);
         }
         [HttpPost]
         

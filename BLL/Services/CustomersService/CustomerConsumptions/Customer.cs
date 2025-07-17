@@ -4,6 +4,7 @@ using BLL.Services.Unified_Response;
 using DAL.Entities;
 using DAL.Repo.Abstraction;
 using Microsoft.AspNetCore.Http;
+using System.Net;
 
 namespace BLL.Services.CustomersService
 {
@@ -20,13 +21,13 @@ namespace BLL.Services.CustomersService
                     var customerConsumption = mapper.Map<CustomerConsumptions>(CustomerConsumption);
                     customerConsumption.ConsumptionAmount = await CalculateConsumptions(CustomerConsumption);
                     await RepoConsumption.Add(customerConsumption);
-                    return UnifiedResponse<CustomerConsumptionDTO>.SuccessResult(CustomerConsumption);
+                    return UnifiedResponse<CustomerConsumptionDTO>.SuccessResult(CustomerConsumption,HttpStatusCode.OK);
                 }
                 throw new Exception("Entity Cannot be Null");
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<CustomerConsumptionDTO>.ErrorResult(ex.Message);
+                return UnifiedResponse<CustomerConsumptionDTO>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> UploadConsumption(IFormFile file)
@@ -36,11 +37,11 @@ namespace BLL.Services.CustomersService
                 var UploadedCustomers = await file.UploadSheet<CustomerConsumptionDTO>();
                 var result = mapper.Map<List<CustomerConsumptionDTO>, List<CustomerConsumptions>>(UploadedCustomers);
                 await RepoConsumption.AddRange(result);
-                return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(UploadedCustomers);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(UploadedCustomers, HttpStatusCode.OK);
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message,HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> GetCustomerConsumptions(long CustomerCode)
@@ -51,10 +52,10 @@ namespace BLL.Services.CustomersService
                 if (CustomerConsumptions is null || CustomerConsumptions.Count == 0)
                     throw new Exception("Customer has no consumptions");
                 var result = mapper.Map<List<CustomerConsumptionDTO>>(CustomerConsumptions);
-                return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(result);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(result, HttpStatusCode.NotFound);
             }catch(Exception ex)
             {
-                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> GetAllConsumptions()
@@ -65,11 +66,11 @@ namespace BLL.Services.CustomersService
                 if (Customer is null || Customer.Count == 0)
                     throw new Exception("There is no Consumptions In DataBase");
                 var result = mapper.Map<List<CustomerConsumptionDTO>>(Customer);
-                return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(result);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(result, HttpStatusCode.NotFound);
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }
         //public async Task<UnifiedResponse<CustomerConsumptionDTO>> EditConsumption(CustomerConsumptionDTO Customer)
@@ -101,11 +102,11 @@ namespace BLL.Services.CustomersService
                     throw new Exception("Customer Not Found!");
                 var response = await RepoConsumption.Delete(result);
                 
-                return UnifiedResponse<bool>.SuccessResult(true);
+                return UnifiedResponse<bool>.SuccessResult(true, HttpStatusCode.OK);
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<bool>.ErrorResult(ex.Message);
+                return UnifiedResponse<bool>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<decimal> CalculateConsumptions(CustomerConsumptionDTO Customer)

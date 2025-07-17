@@ -4,6 +4,7 @@ using BLL.Services.CustomersService;
 using BLL.Services.Unified_Response;
 using DAL.Entities;
 using DAL.Repo.Abstraction;
+using System.Net;
 
 namespace BLL.Services.TariffService
 {
@@ -33,14 +34,14 @@ namespace BLL.Services.TariffService
                     var Tariff = mapper.Map<Tariff>(tariff);
                     (bool isSucess ,string message) result = await repo.Add(Tariff);
                     if(result.isSucess)
-                    return UnifiedResponse<TariffDto>.SuccessResult(tariff,"tariff added successfully");
-                    return UnifiedResponse<TariffDto>.ErrorResult("An Error Happened While Adding Tariff");
+                    return UnifiedResponse<TariffDto>.SuccessResult(tariff,HttpStatusCode.OK,"tariff added successfully");
+                    return UnifiedResponse<TariffDto>.ErrorResult("An Error Happened While Adding Tariff",HttpStatusCode.NotFound);
                 }
-                return UnifiedResponse<TariffDto>.ErrorResult("Tariff cannot be null");
+                return UnifiedResponse<TariffDto>.ErrorResult("Tariff cannot be null", HttpStatusCode.NotFound);
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<TariffDto>.ErrorResult(ex.Message);
+                return UnifiedResponse<TariffDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }
 

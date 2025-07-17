@@ -1,4 +1,5 @@
 ﻿using BLL.Dto.Account;
+using BLL.Services.Unified_Response;
 using BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,11 +17,11 @@ namespace Examination.Controllers
             user = User;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<ActionResult<UnifiedResponse<List<UserDto>>>> GetAllUsers()
         {
             var result = await user.GetAll();
             if (result is null)
-            return BadRequest("there is no users in the database");
+                return BadRequest(result);
             return Ok(result);
         }
         [HttpDelete]

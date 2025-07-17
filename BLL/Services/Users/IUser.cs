@@ -7,7 +7,7 @@ namespace BLL.Services.Users
 {
   public  interface IUser
     {
-        public Task<List<AppUser>> GetAll();
+        public Task<UnifiedResponse<List<UserDto>>> GetAll();
         public Task<bool> Register(AccountDto account ,string? userName = null);
         public Task<bool> DeleteUser(string Id , string userName);
         public Task<bool> EditUser(AccountDto account);

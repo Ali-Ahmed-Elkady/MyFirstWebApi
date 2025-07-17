@@ -1,4 +1,7 @@
-﻿using BLL.Dto;
+﻿using AutoMapper;
+using Azure;
+using Azure.Core;
+using BLL.Dto;
 using BLL.Dto.Account;
 using BLL.Services.Unified_Response;
 using DAL.Entities;
@@ -7,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 namespace BLL.Services.Users
 {
@@ -16,12 +20,14 @@ namespace BLL.Services.Users
         private readonly SignInManager<AppUser> SignIn;
         private readonly RoleManager<IdentityRole> role;
         private readonly IConfiguration configuration;
-        public User(UserManager<AppUser> User, SignInManager<AppUser> signIn, RoleManager<IdentityRole> Role, IConfiguration configuration)
+        private readonly IMapper mapper;
+        public User(UserManager<AppUser> User, SignInManager<AppUser> signIn, RoleManager<IdentityRole> Role, IConfiguration configuration ,IMapper Mapper)
         {
             user = User;
             SignIn = signIn;
             role = Role;
             this.configuration = configuration;
+            mapper = Mapper;
         }
 
         public async Task<bool> AddRoles(string RoleName)
@@ -108,9 +114,16 @@ namespace BLL.Services.Users
             throw new Exception("User Is Deleted Cannot Be edited ");
         }
 
-        public async Task<List<AppUser>> GetAll()
+        public async Task<UnifiedResponse<List<UserDto>>> GetAll()
         {
-            return await user.Users.ToListAsync();
+            var result = mapper.Map<List<AppUser>, List<UserDto>>(await user.Users.ToListAsync());
+            if(result is null || result.Count == 0)
+            {
+                var response = UnifiedResponse<List<UserDto>>.ErrorResult("No users found",HttpStatusCode.NotFound);
+                return response;
+            }
+            var Response = UnifiedResponse<List<UserDto>>.SuccessResult(result,HttpStatusCode.OK);
+            return Response;
         }
 
         public async Task<UnifiedResponse<AuthTokenDto>> Login(AccountDto account)
@@ -152,9 +165,9 @@ namespace BLL.Services.Users
                         Token = new JwtSecurityTokenHandler().WriteToken(token) ,
                         Expiry = token.ValidTo 
                     };
-                    return UnifiedResponse<AuthTokenDto>.SuccessResult(_token);
+                    return UnifiedResponse<AuthTokenDto>.SuccessResult(_token, HttpStatusCode.OK);
                 }
-                return UnifiedResponse<AuthTokenDto>.ErrorResult("Error");
+                return UnifiedResponse<AuthTokenDto>.ErrorResult("Error", HttpStatusCode.NotFound);
             }
             catch (Exception ex)
             {

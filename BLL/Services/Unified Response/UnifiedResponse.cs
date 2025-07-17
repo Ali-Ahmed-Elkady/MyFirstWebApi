@@ -10,18 +10,19 @@ namespace BLL.Services.Unified_Response
         public string? Message { get; set; }
         public T? Data { get; set; }
 
-        public UnifiedResponse(bool success, T? data = default, string? message = null)
+        public UnifiedResponse(bool success, HttpStatusCode code, T? data = default, string? message = null)
         {
             Success = success;
             Data = data;
             Message = message;
+            StatusCode = code;
         }
 
-        public static UnifiedResponse<T> SuccessResult(T data, string? message = null)
-            => new UnifiedResponse<T>(true, data, message);
+        public static UnifiedResponse<T> SuccessResult(T data, HttpStatusCode code, string? message = null)
+            => new UnifiedResponse<T>(true, code, data, message );
 
-        public static UnifiedResponse<T> ErrorResult(string message)
-            => new UnifiedResponse<T>(false, default, message);
+        public static UnifiedResponse<T> ErrorResult(string message, HttpStatusCode code)
+            => new UnifiedResponse<T>(false,code , default, message);
     }
 
 }

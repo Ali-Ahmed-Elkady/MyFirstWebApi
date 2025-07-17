@@ -5,6 +5,7 @@ using BLL.Services.Unified_Response;
 using DAL.Entities;
 using DAL.Repo.Abstraction;
 using Microsoft.AspNetCore.Http;
+using System.Net;
 namespace BLL.Services.CustomersService
 {
     public partial class Customer : ICustomer
@@ -29,13 +30,13 @@ namespace BLL.Services.CustomersService
                     var customer = mapper.Map<Customers>(Customer);
                     customer.Create(UserName);
                     await repo.Add(customer);
-                    return UnifiedResponse<CustomerDto>.SuccessResult(Customer);
+                    return UnifiedResponse<CustomerDto>.SuccessResult(Customer,HttpStatusCode.OK);
                 }
                 throw new Exception("Entity Cannot be Null");
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message);
+                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<CustomerDto>> Delete(long CustomerCode)
@@ -48,11 +49,11 @@ namespace BLL.Services.CustomersService
                     throw new Exception("Customer Not Found!");              
                     result.IsDeleted = true; 
                 await repo.Edit(result);
-                return UnifiedResponse<CustomerDto>.SuccessResult(result2);
+                return UnifiedResponse<CustomerDto>.SuccessResult(result2, HttpStatusCode.OK);
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message);
+                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }
 
@@ -70,12 +71,12 @@ namespace BLL.Services.CustomersService
                 ExistingCustomer.Update(UserName);
                 (bool isSucess ,string message) result =await repo.Edit(ExistingCustomer);
                 if(result.isSucess)
-                return UnifiedResponse<CustomerDto>.SuccessResult(Customer);
+                return UnifiedResponse<CustomerDto>.SuccessResult(Customer, HttpStatusCode.OK);
                 throw new Exception(result.message);
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message);
+                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
 
         }
@@ -88,11 +89,11 @@ namespace BLL.Services.CustomersService
                 if (Customer is null || Customer.Count == 0)
                     throw new Exception("There is no customers in DB!");
                 var result = mapper.Map<List<CustomerDto>>(Customer);
-                return UnifiedResponse<List<CustomerDto>>.SuccessResult(result);
+                return UnifiedResponse<List<CustomerDto>>.SuccessResult(result, HttpStatusCode.NotFound);
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<List<CustomerDto>>.ErrorResult(ex.Message);
+                return UnifiedResponse<List<CustomerDto>>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }
 
@@ -104,11 +105,11 @@ namespace BLL.Services.CustomersService
                 if (Customer is null)
                     throw new Exception("No Customer Matches the current Code");
                 var result = mapper.Map<CustomerDto>(Customer);
-                return UnifiedResponse<CustomerDto>.SuccessResult(result);
+                return UnifiedResponse<CustomerDto>.SuccessResult(result, HttpStatusCode.NotFound);
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message);
+                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<bool>> Upload(IFormFile file)
@@ -117,11 +118,11 @@ namespace BLL.Services.CustomersService
             {
                 var result = mapper.Map<List<CustomerDto>, List<Customers>>(await file.UploadSheet<CustomerDto>());
                 await repo.AddRange(result);
-                return UnifiedResponse<bool>.SuccessResult(true);
+                return UnifiedResponse<bool>.SuccessResult(true, HttpStatusCode.NotFound);
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<bool>.ErrorResult(ex.Message);
+                return UnifiedResponse<bool>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }        
     }

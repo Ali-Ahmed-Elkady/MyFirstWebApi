@@ -2,6 +2,7 @@
 using BLL.Services.Unified_Response;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using System.Net;
 
 namespace BLL.Services.TariffService
 {
@@ -28,7 +29,7 @@ namespace BLL.Services.TariffService
                             Tariff.RecalculationAddedAmount = (Tariff.RecalculationEdge * tariff.Price) - (result.bure);
                         }
                         await steps.Add(Tariff);
-                        return UnifiedResponse<TariffStepsDto>.SuccessResult(tariff);
+                        return UnifiedResponse<TariffStepsDto>.SuccessResult(tariff,HttpStatusCode.OK);
                     }
                     throw new Exception("Tariff Step Cannot be smaller Than The previous Step");
                 }
@@ -36,7 +37,7 @@ namespace BLL.Services.TariffService
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<TariffStepsDto>.ErrorResult(ex.Message);
+                return UnifiedResponse<TariffStepsDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<TariffStepsDto>> Edit(TariffStepsDto tariff)
@@ -53,13 +54,13 @@ namespace BLL.Services.TariffService
                 {
                     mapper.Map(tariff, ExistingTariff);
                     await steps.Edit(ExistingTariff);
-                    return UnifiedResponse<TariffStepsDto>.SuccessResult(tariff);
+                    return UnifiedResponse<TariffStepsDto>.SuccessResult(tariff, HttpStatusCode.NotFound);
                 }
                 throw new Exception("Tariff Step Cannot be smaller Than The previous Step");
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<TariffStepsDto>.ErrorResult(ex.Message);
+                return UnifiedResponse<TariffStepsDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<(bool, string)> DeleteTariffStep(int id)
