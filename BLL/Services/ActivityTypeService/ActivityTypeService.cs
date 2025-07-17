@@ -21,17 +21,35 @@ namespace BLL.Services.ActivityTypeService
         {
             try
             {
+                List<string> errors = new();
+
                 if (ActivityType is null)
-                    throw new Exception("Activity Type Can Not be null");
-                if (ActivityType.Name is null)
-                    throw new Exception("Name Cannot be null");
+                {
+                    errors.Add("ActivityType cannot be null");
+                    return UnifiedResponse<ActivityTypeDto>.ErrorResult(errors, "ActivityType cannot be null", HttpStatusCode.BadRequest);
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(ActivityType.Name))
+                        errors.Add("Activity Name cannot be null or empty");
+
+                    if (ActivityType.Code <= 0)
+                        errors.Add("Activity Code must be greater than 0");
+                }
+
+                if (errors.Any())
+                {
+                    return UnifiedResponse<ActivityTypeDto>.ErrorResult(errors,"Validation failed",HttpStatusCode.BadRequest);
+                }
+
                 var activity = mapper.Map<ActivityType>(ActivityType);
                 await repo.Add(activity);
-                return UnifiedResponse<ActivityTypeDto>.SuccessResult(ActivityType,HttpStatusCode.OK);
+
+                return UnifiedResponse<ActivityTypeDto>.SuccessResult(ActivityType,HttpStatusCode.Created,message: "Activity type created successfully");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return UnifiedResponse<ActivityTypeDto>.ErrorResult(ex.Message,HttpStatusCode.NotFound);
+                return UnifiedResponse<ActivityTypeDto>.ErrorResult(new List<string> { ex.Message },"Unexpected error occurred",HttpStatusCode.InternalServerError);
             }
         }
 
@@ -41,15 +59,14 @@ namespace BLL.Services.ActivityTypeService
             {
                 var result = await repo.Get(a=>a.Code == code);              
                 if (result is null)
-                    throw new Exception("Activity Not Found");
+                    return UnifiedResponse<ActivityTypeDto>.ErrorResult(new List<string> { "Activity not found" }, "Activity Not Found", HttpStatusCode.NotFound);
                 var Response =mapper.Map<ActivityTypeDto>(result);
                 (bool isSucess , string message) response = await repo.Delete(result);
-                return UnifiedResponse<ActivityTypeDto>.SuccessResult(Response, HttpStatusCode.OK,response.message); 
-                
+                return UnifiedResponse<ActivityTypeDto>.SuccessResult(Response, HttpStatusCode.OK,response.message);   
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<ActivityTypeDto>.ErrorResult(ex.Message,HttpStatusCode.NotAcceptable);
+                return UnifiedResponse<ActivityTypeDto>.ErrorResult(new List<string> { ex.Message },"An Error Happened While Deleting Activity",HttpStatusCode.NotAcceptable);
             }
         }
 
@@ -57,20 +74,34 @@ namespace BLL.Services.ActivityTypeService
         {
             try
             {
-                var existing = await repo.Get(a => a.Code == activity.Code);
-                if (existing is null)
-                    throw new Exception("Activity Not Found In DB!");
+                var Errors = new List<string>();
+                if (activity is null)
+                {
+                    Errors.Add("Activity cannot be null");
+                    return UnifiedResponse<ActivityTypeDto>.ErrorResult(Errors, "Activity cannot be null", HttpStatusCode.BadRequest);
+                }
+                else
+                {
+                    var Activity = await repo.Get(a => a.Code == activity.Code);
 
-                mapper.Map(activity, existing);
-
-                (bool isSucess , string message) result = await repo.Edit(existing);
-                if (result.isSucess)
-                return UnifiedResponse<ActivityTypeDto>.SuccessResult(activity, HttpStatusCode.OK);
-                throw new Exception(result.message);
+                    if (Activity is null)
+                    {
+                        Errors.Add("Activity Not Found In DB!");
+                        return UnifiedResponse<ActivityTypeDto>.ErrorResult(Errors, "Activity Not Found", HttpStatusCode.NotFound);
+                    }
+                    else
+                    {
+                        mapper.Map(activity, Activity);
+                        (bool isSucess, string message) result = await repo.Edit(Activity);
+                        if (result.isSucess)
+                            return UnifiedResponse<ActivityTypeDto>.SuccessResult(activity, HttpStatusCode.OK);
+                        throw new Exception(result.message);
+                    }
+                }
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<ActivityTypeDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<ActivityTypeDto>.ErrorResult(new List<string> { ex.Message },"Error While Editing Activity", HttpStatusCode.NotFound);
             }
         }
 
@@ -79,34 +110,46 @@ namespace BLL.Services.ActivityTypeService
         {
             try
             {
+                var Errors = new List<string>();
                 var result = await repo.GetAll();
                 if (result is null || result.Count == 0)
-                    throw new Exception("There is no Activities in DB!");
+                    Errors.Add("There is no Activities in DB!");
+                if(Errors.Any())
+                    return UnifiedResponse<List<ActivityTypeDto>>.ErrorResult(Errors, "No Activities Found", HttpStatusCode.NotFound);
                 var response = mapper.Map<List<ActivityTypeDto>>(result);
                 return UnifiedResponse<List<ActivityTypeDto>>.SuccessResult(response, HttpStatusCode.OK);
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<List<ActivityTypeDto>>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<List<ActivityTypeDto>>.ErrorResult(new List<string> { ex.Message },"Error While Getting Activities", HttpStatusCode.NotFound);
             }
         }
 
         public async Task<UnifiedResponse<ActivityTypeDto>> GetByCode(int code)
         {
-            try 
+            try
             {
-                if (code is 0)
-                    throw new Exception("Activity Code Cannot Be 0");
-                var Activity = await repo.Get(a => a.Code == code);
-                if (Activity is null)
-                    throw new Exception("Activity Not Found");
-                var result = mapper.Map<ActivityTypeDto>(Activity);
-                return UnifiedResponse<ActivityTypeDto>.SuccessResult(result ,HttpStatusCode.OK);
+                if (code <= 0)
+                {
+                    return UnifiedResponse<ActivityTypeDto>.ErrorResult(new List<string> { "Code must be greater than 0" },"Validation failed", HttpStatusCode.BadRequest);
+                }
+
+                var activity = await repo.Get(a => a.Code == code);
+
+                if (activity is null)
+                {
+                    return UnifiedResponse<ActivityTypeDto>.ErrorResult(new List<string> { $"No activity found with code {code}" },"Activity not found",HttpStatusCode.NotFound);
+                }
+
+                var result = mapper.Map<ActivityTypeDto>(activity);
+
+                return UnifiedResponse<ActivityTypeDto>.SuccessResult(result,HttpStatusCode.OK,message: "Activity retrieved successfully");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return UnifiedResponse<ActivityTypeDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<ActivityTypeDto>.ErrorResult(new List<string> { ex.Message },"Unexpected error occurred",HttpStatusCode.InternalServerError);
             }
         }
+
     }
 }
