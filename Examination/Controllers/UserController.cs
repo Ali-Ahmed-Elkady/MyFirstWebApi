@@ -1,4 +1,4 @@
-﻿using BLL.Dto;
+﻿using BLL.Dto.Account;
 using BLL.Services.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +26,8 @@ namespace Examination.Controllers
         [HttpDelete]
         public async Task<IActionResult> DeleteUser (string id)
         {
-            var result = await user.DeleteUser(id);
+
+            var result = await user.DeleteUser(id ,User.Identity?.Name);
             if (result)
             {
                 return Ok("user Deleted Successfully");
@@ -35,27 +36,35 @@ namespace Examination.Controllers
         }
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Register(string username, string password)
+        public async Task<IActionResult> Register(AccountDto account )
         {
-             var result = await user.AddUsers(username, password);
+            bool result;
+            if (User.Identity?.Name is null)
+            {
+                 result = await user.Register(account);
+            }
+            else
+            {
+                 result = await user.Register(account, User.Identity.Name);
+            }
              if (result)
-             return Ok("user added successfully");
+                return Ok("user added successfully");
              return BadRequest("an error happen while adding user");
         }
         [HttpPut]
-        public async Task <IActionResult> Edit (UserDto user1)
+        public async Task <IActionResult> Edit (AccountDto account)
         {  
            
-            var result =  await user.EditUser(user1);
+            var result =  await user.EditUser(account);
             if (result)
             return Ok("user updated successfully");
             return BadRequest("Error");
         }
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Login (string username ,string password)
+        public async Task<IActionResult> Login (AccountDto account)
         {
-          var result = await user.Login(username, password);
+          var result = await user.Login(account);
             if (result.Success)
                 return Ok(result);
             return BadRequest(result);

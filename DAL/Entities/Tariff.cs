@@ -7,6 +7,7 @@
         public DateTime ActivationDate { get; set; }
         public int ZeroReading { get; set; }
         public int ActivityTypeId { get; set; }
+        public bool IsActive { get; set; } 
         public ActivityType? activity { get; set; }
         public List<TariffSteps>? TariffSteps { get; set; }
     }

@@ -2,6 +2,7 @@
 {
     public class TariffStepsDto
     {
+        public int Id { get; set; }
         public int From { get; set; }
         public int To { get; set; }
         public decimal Price { get; set; }

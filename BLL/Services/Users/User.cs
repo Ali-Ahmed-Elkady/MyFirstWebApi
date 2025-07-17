@@ -1,4 +1,5 @@
 ﻿using BLL.Dto;
+using BLL.Dto.Account;
 using BLL.Services.Unified_Response;
 using DAL.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -38,29 +39,35 @@ namespace BLL.Services.Users
             }
         }
 
-        public async Task<bool> AddUsers(string username, string password)
+        public async Task<bool> Register(AccountDto account ,string? userName=null)
         {
-            if (string.IsNullOrWhiteSpace(username))
+            if (account.UserName is null || account.password is null)
             {
-                throw new Exception("Email cannot be empty");
-
+                throw new Exception("User name or password cannot be empty");
             }
 
             var AppsUser = new AppUser
             {
-                Name = username,
-                Email = username + "@gmail.com",
-                UserName = username
+                Name = account.UserName,
+                Email = account.UserName + "@gmail.com",
+                UserName = account.UserName
             };
-
-            var result = await user.CreateAsync(AppsUser, password);
+            if (userName is null)
+            {
+                AppsUser.CreateUser();
+            }
+            else
+            {
+                AppsUser.CreateUser(userName);
+            }
+            var result = await user.CreateAsync(AppsUser, account.password);
             if (result.Succeeded) return true;
             return false;
-
         }
 
-        public async Task<bool> DeleteUser(string Id)
+        public async Task<bool> DeleteUser(string Id , string userName)
         {
+            
             var result = await user.FindByIdAsync(Id);
             if (result is null)
             {
@@ -70,33 +77,31 @@ namespace BLL.Services.Users
             {
                 throw new Exception("user is Deleted");
             }
-            result.IsDeleted = true;
+            result.DeleteUser(userName);
             await user.UpdateAsync(result);
             return true;
         }
         // take the parameters as object not props 
         //split the edit function into two one for the user the other for update password 
-        public async Task<bool> EditUser(UserDto user1)
+        public async Task<bool> EditUser(AccountDto account)
         {
-
-            var User = await user.FindByNameAsync(user1.username);
+            if (account.UserName is null || account.password is null)
+            {
+                throw new Exception("User name or password cannot be empty");
+            }
+            var User = await user.FindByNameAsync(account.UserName);
             if (User is null)
             {
                 throw new Exception("User not found");
             }
             if (!User.IsDeleted)
             {
-                User.UserName = user1.username;
-                User.Email = user1.NewUserName + "@gmail.com";
-                if (user1.NewPassword != null && user1.password != null)
-                {
-                    await user.ChangePasswordAsync(User, user1.password, user1.NewPassword);
-                }
-
+                User.UserName = account.UserName;
+                User.Email = account.UserName + "@gmail.com";
                 var result = await user.UpdateAsync(User);
                 if (!result.Succeeded)
                 {
-                    throw new Exception("User update failed: " + string.Join(", ", result.Errors.Select(e => e.Description)));
+                  throw new Exception("User update failed: " + string.Join(", ", result.Errors.Select(e => e.Description)));
                 }
                 return true;
             }
@@ -108,16 +113,20 @@ namespace BLL.Services.Users
             return await user.Users.ToListAsync();
         }
 
-        public async Task<UnifiedResponse<AuthTokenDto>> Login(string username, string password)
+        public async Task<UnifiedResponse<AuthTokenDto>> Login(AccountDto account)
         {
             try
             {
-                var result = await user.FindByNameAsync(username);
+                if (account.UserName is null || account.password is null)
+                {
+                    throw new Exception("User name or password cannot be empty");
+                }
+                var result = await user.FindByNameAsync(account.UserName);
                 if (result == null)
                 {
                     throw new Exception("user not found");
                 }
-                if (await user.CheckPasswordAsync(result, password))
+                if (await user.CheckPasswordAsync(result, account.password))
                 {
                     var claims = new List<Claim>();
                     claims.Add(new Claim(ClaimTypes.Name, result.UserName));

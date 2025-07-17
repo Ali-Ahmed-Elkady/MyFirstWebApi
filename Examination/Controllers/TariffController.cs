@@ -44,12 +44,12 @@ namespace Examination.Controllers
         [HttpPost]
         public async Task<IActionResult> AddTariffStep(TariffStepsDto tariffSteps)
         {
-            var (isSuccess, message) = await service.Add(tariffSteps);
+            var result = await service.Add(tariffSteps);
 
-            if (isSuccess)
-                return Ok(new { success = true, message });
+            if (result.Success)
+                return Ok(result);
 
-            return BadRequest(new { success = false, message });
+            return BadRequest(result);
         }
         [HttpPut]
         public async Task<IActionResult> UpdateTariffStep(TariffStepsDto tariff)

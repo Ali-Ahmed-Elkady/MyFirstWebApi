@@ -2,7 +2,7 @@
 {
     public class CustomerDto
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public string? Address { get; set; }
         public DateTime InstallationDate { get; set; }
         public long CustomerCode { get; set; }

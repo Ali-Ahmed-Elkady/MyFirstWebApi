@@ -1,53 +1,65 @@
 ﻿using BLL.Dto;
+using BLL.Services.Unified_Response;
 using DAL.Entities;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace BLL.Services.TariffService
 {
     public partial class TariffService
     {
-        public async Task<(bool, string)> Add(TariffStepsDto tariff)
+        public async Task<UnifiedResponse<TariffStepsDto>> Add(TariffStepsDto tariff)
         {
             try
             {
                 if (tariff != null)
                 {
-                    var CurrentTariff = await repo.Get(a => a.Id == tariff.TariffId);
-                    var Activity = await ActivityRepo.Get(a => a.Code == CurrentTariff.ActivityTypeId);
-                    var Tariff = mapper.Map<TariffSteps>(tariff);
-                    
-                    if (tariff.IsRecalculated)
+                    var prevStep = (await steps.GetAll(a => a.TariffId == tariff.TariffId)).OrderByDescending(a => a.Id).FirstOrDefault();
+                    if (prevStep == null || tariff.From > prevStep.To)
                     {
-                        Tariff.RecalculationEdge = tariff.From -1;
-                        (decimal Total ,decimal bure) result = await customer.CalculateConsumptions(Tariff.RecalculationEdge,Activity.Code);
-                        Tariff.RecalculationAddedAmount = (Tariff.RecalculationEdge * tariff.Price)-(result.bure);
-                    }                  
-                    await steps.Add(Tariff);
-                    return (true, "Tariff Step Added Successfully");
+
+                        var CurrentTariff = await repo.Get(a => a.Id == tariff.TariffId);
+                        var Activity = await ActivityRepo.Get(a => a.Code == CurrentTariff.ActivityTypeId);
+                        var Tariff = mapper.Map<TariffSteps>(tariff);
+
+                        if (tariff.IsRecalculated)
+                        {
+                            Tariff.RecalculationEdge = tariff.From - 1;
+                            (decimal Total, decimal bure) result = await customer.CalculateConsumptions(Tariff.RecalculationEdge, Activity.Code);
+                            Tariff.RecalculationAddedAmount = (Tariff.RecalculationEdge * tariff.Price) - (result.bure);
+                        }
+                        await steps.Add(Tariff);
+                        return UnifiedResponse<TariffStepsDto>.SuccessResult(tariff);
+                    }
+                    throw new Exception("Tariff Step Cannot be smaller Than The previous Step");
                 }
-                throw new Exception("Entity Cannot be Null");
+                throw new Exception("Tariff Step cannot be null");
             }
             catch (Exception ex)
             {
-                return (false, ex.Message);
+                return UnifiedResponse<TariffStepsDto>.ErrorResult(ex.Message);
             }
         }
-        public async Task<(bool, string)> Edit(TariffStepsDto tariff)
+        public async Task<UnifiedResponse<TariffStepsDto>> Edit(TariffStepsDto tariff)
         {
             try
             {
                 if (tariff is null)
-                    throw new Exception("Invalid Tariff Data!");
-                var Tariff = tariff.TariffId;
-                var ExistingTariff =await steps.Get(a=>a.Id == Tariff);
+                    throw new Exception("Tariff Step Data Can't Be Null");
+                var ExistingTariff =await steps.Get(a=>a.Id == tariff.TariffId);
                 if (ExistingTariff is null)
                     throw new Exception("Tariff not Found!");
-                 mapper.Map(tariff,ExistingTariff);
-                await steps.Edit(ExistingTariff);
-                return (true, "user edited Successfully");
+                var prevStep = (await steps.GetAll(a => a.TariffId == tariff.TariffId)).OrderByDescending(a => a.Id).FirstOrDefault();
+                if (prevStep == null || tariff.From > prevStep.To)
+                {
+                    mapper.Map(tariff, ExistingTariff);
+                    await steps.Edit(ExistingTariff);
+                    return UnifiedResponse<TariffStepsDto>.SuccessResult(tariff);
+                }
+                throw new Exception("Tariff Step Cannot be smaller Than The previous Step");
             }
             catch (Exception ex)
             {
-                return (false, ex.Message);
+                return UnifiedResponse<TariffStepsDto>.ErrorResult(ex.Message);
             }
         }
         public async Task<(bool, string)> DeleteTariffStep(int id)
@@ -67,7 +79,7 @@ namespace BLL.Services.TariffService
         }
         public async Task<List<TariffStepsDto>> GetByTariffId(int code)
         {
-            var exists = await steps.Get(a => a.Id == code);
+            var exists = await steps.GetAll(a => a.TariffId == code);
             if (exists is null)
                 throw new Exception("No Tariffs For this Activity");
             var result = mapper.Map<List<TariffStepsDto>>(exists);

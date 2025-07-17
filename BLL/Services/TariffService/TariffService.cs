@@ -81,7 +81,7 @@ namespace BLL.Services.TariffService
 
         public async Task<List<TariffDto>> GetByActivityType(int code)
         {
-            var exists = await repo.Get(a => a.ActivityTypeId == code);
+            var exists = await repo.GetAll(a => a.ActivityTypeId == code);
             if(exists is null)
             throw new Exception("No Tariffs For this Activity");
             var result = mapper.Map<List<TariffDto>>(exists);
