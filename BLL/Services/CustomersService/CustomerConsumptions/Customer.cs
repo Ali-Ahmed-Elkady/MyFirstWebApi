@@ -32,7 +32,6 @@ namespace BLL.Services.CustomersService
                         return UnifiedResponse<CustomerConsumptionDTO>.ErrorResult(Errors, "Invalid consumption value", HttpStatusCode.BadRequest);
                     }
                     var customerConsumption = mapper.Map<CustomerConsumptions>(CustomerConsumption);
-                    customerConsumption.ConsumptionAmount = await CalculateConsumptions(CustomerConsumption);
                     await RepoConsumption.Add(customerConsumption);
                     return UnifiedResponse<CustomerConsumptionDTO>.SuccessResult(CustomerConsumption,HttpStatusCode.OK);
                 }
@@ -216,20 +215,21 @@ namespace BLL.Services.CustomersService
                 throw new Exception($"Error calculating consumption cost: {ex.Message}");
             }
         }
-        public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> IsdarConsumptions()
+        public async Task<UnifiedResponse<List<EsdarDto>>> IsdarConsumptions()
         {
             var CustomerConsumption = new List<Esdar>();
             var result = await RepoConsumption.GetAll();
             var Customers = mapper.Map<List<CustomerConsumptionDTO>>(result);
             if (result is null || result.Count == 0)
             {
-                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(new List<string> { "No consumptions found" }, "You Cannot Use Isdar Before Uploading Consumptions ", HttpStatusCode.NotFound);
+                return UnifiedResponse<List<EsdarDto>>.ErrorResult(new List<string> { "No consumptions found" }, "You Cannot Use Isdar Before Uploading Consumptions ", HttpStatusCode.NotFound);
             }
             foreach(var item in Customers)
             {         
                var element = await CalculateConsumptions(item);
                CustomerConsumption.Add(new Esdar
                {
+                   ConsumptionKw=item.ConsumptionKw,
                    EsdarDate = DateTime.Now,
                    ConsumptionAmount = element,
                    CustomerConsumptionsId= item.Id,
@@ -237,7 +237,8 @@ namespace BLL.Services.CustomersService
                
             }
             await repoEsdar.AddRange(CustomerConsumption);
-            return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(mapper.Map<List<CustomerConsumptionDTO>>(result), HttpStatusCode.OK);
+            var response = mapper.Map<List<EsdarDto>>(CustomerConsumption);
+            return UnifiedResponse<List<EsdarDto>>.SuccessResult(response, HttpStatusCode.OK);
 
         }
     }
