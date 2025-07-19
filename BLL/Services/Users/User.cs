@@ -119,7 +119,7 @@ namespace BLL.Services.Users
             var result = mapper.Map<List<AppUser>, List<UserDto>>(await user.Users.ToListAsync());
             if(result is null || result.Count == 0)
             {
-                var response = UnifiedResponse<List<UserDto>>.ErrorResult("No users found",HttpStatusCode.NotFound);
+                var response = UnifiedResponse<List<UserDto>>.ErrorResult(new List<string> { "Error"},"No users found",HttpStatusCode.NotFound);
                 return response;
             }
             var Response = UnifiedResponse<List<UserDto>>.SuccessResult(result,HttpStatusCode.OK);
@@ -167,11 +167,11 @@ namespace BLL.Services.Users
                     };
                     return UnifiedResponse<AuthTokenDto>.SuccessResult(_token, HttpStatusCode.OK);
                 }
-                return UnifiedResponse<AuthTokenDto>.ErrorResult("Error", HttpStatusCode.NotFound);
+                return UnifiedResponse<AuthTokenDto>.ErrorResult(new List<string> { "error"}, "Error", HttpStatusCode.NotFound);
             }
             catch (Exception ex)
             {
-                throw new Exception("Login failed: " + ex.Message);
+                return UnifiedResponse<AuthTokenDto>.ErrorResult(new List<string> { ex.Message }, ex.Message, HttpStatusCode.NotFound);
 
             }
         }

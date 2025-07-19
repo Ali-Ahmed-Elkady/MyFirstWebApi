@@ -16,18 +16,31 @@ namespace BLL.Services.CustomersService
         {
             try
             {
+                var Errors = new List<string>();
                 if (CustomerConsumption != null)
                 {
+                    var result = await repo.Get(a => a.CustomerCode == CustomerConsumption.CustomerCode);
+                    if (result == null) 
+                    { 
+                        Errors.Add("Customer not found in database");
+                        return UnifiedResponse<CustomerConsumptionDTO>.ErrorResult(Errors, "Customer not found", HttpStatusCode.NotFound);
+                    }
+                    if (CustomerConsumption.ConsumptionKw < 0)
+                    {
+                        Errors.Add("Consumption must be greater or Equal zero");
+                        return UnifiedResponse<CustomerConsumptionDTO>.ErrorResult(Errors, "Invalid consumption value", HttpStatusCode.BadRequest);
+                    }
                     var customerConsumption = mapper.Map<CustomerConsumptions>(CustomerConsumption);
                     customerConsumption.ConsumptionAmount = await CalculateConsumptions(CustomerConsumption);
                     await RepoConsumption.Add(customerConsumption);
                     return UnifiedResponse<CustomerConsumptionDTO>.SuccessResult(CustomerConsumption,HttpStatusCode.OK);
                 }
-                throw new Exception("Entity Cannot be Null");
+                Errors.Add("Entity Cannot be Null");
+                return UnifiedResponse<CustomerConsumptionDTO>.ErrorResult(Errors, "Entity cannot be null", HttpStatusCode.BadRequest);
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<CustomerConsumptionDTO>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<CustomerConsumptionDTO>.ErrorResult(new List<string> { ex.Message },ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> UploadConsumption(IFormFile file)
@@ -41,7 +54,7 @@ namespace BLL.Services.CustomersService
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message,HttpStatusCode.NotFound);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(new List<string> { ex.Message },ex.Message,HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> GetCustomerConsumptions(long CustomerCode)
@@ -55,7 +68,7 @@ namespace BLL.Services.CustomersService
                 return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(result, HttpStatusCode.NotFound);
             }catch(Exception ex)
             {
-                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(new List<string> { ex.Message },ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> GetAllConsumptions()
@@ -70,7 +83,7 @@ namespace BLL.Services.CustomersService
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(new List<string> { ex.Message },ex.Message, HttpStatusCode.NotFound);
             }
         }
         //public async Task<UnifiedResponse<CustomerConsumptionDTO>> EditConsumption(CustomerConsumptionDTO Customer)
@@ -106,7 +119,7 @@ namespace BLL.Services.CustomersService
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<bool>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<bool>.ErrorResult(new List<string> { ex.Message },ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<decimal> CalculateConsumptions(CustomerConsumptionDTO Customer)

@@ -37,7 +37,7 @@ namespace BLL.Services.TariffService
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<TariffStepsDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<TariffStepsDto>.ErrorResult(new List<string> { ex.Message},ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<TariffStepsDto>> Edit(TariffStepsDto tariff)
@@ -60,7 +60,7 @@ namespace BLL.Services.TariffService
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<TariffStepsDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<TariffStepsDto>.ErrorResult(new List<string> { ex.Message},ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<(bool, string)> DeleteTariffStep(int id)

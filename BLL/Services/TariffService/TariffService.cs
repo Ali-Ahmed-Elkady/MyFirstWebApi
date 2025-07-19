@@ -29,19 +29,21 @@ namespace BLL.Services.TariffService
             {
                 if (tariff != null)
                 {
+                    List<string> errors = new();
                     var Activity =await ActivityRepo.Get(a => a.Code == tariff.ActivityTypeId);
                     tariff.ActivityTypeId = Activity.Id;
                     var Tariff = mapper.Map<Tariff>(tariff);
                     (bool isSucess ,string message) result = await repo.Add(Tariff);
                     if(result.isSucess)
                     return UnifiedResponse<TariffDto>.SuccessResult(tariff,HttpStatusCode.OK,"tariff added successfully");
-                    return UnifiedResponse<TariffDto>.ErrorResult("An Error Happened While Adding Tariff",HttpStatusCode.NotFound);
+                    errors.Add("An error occurred while adding the tariff");
+                    return UnifiedResponse<TariffDto>.ErrorResult(errors,"An Error Happened While Adding Tariff",HttpStatusCode.NotFound);
                 }
-                return UnifiedResponse<TariffDto>.ErrorResult("Tariff cannot be null", HttpStatusCode.NotFound);
+                return UnifiedResponse<TariffDto>.ErrorResult(new List<string> { "Error"},"Tariff cannot be null", HttpStatusCode.NotFound);
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<TariffDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<TariffDto>.ErrorResult(new List<string> { ex.Message},ex.Message, HttpStatusCode.NotFound);
             }
         }
 

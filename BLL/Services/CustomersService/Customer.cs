@@ -36,7 +36,7 @@ namespace BLL.Services.CustomersService
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<CustomerDto>.ErrorResult(new List<string> { ex.Message},ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<CustomerDto>> Delete(long CustomerCode)
@@ -53,7 +53,7 @@ namespace BLL.Services.CustomersService
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<CustomerDto>.ErrorResult(new List<string> { ex.Message},ex.Message, HttpStatusCode.NotFound);
             }
         }
 
@@ -76,7 +76,7 @@ namespace BLL.Services.CustomersService
             }
             catch (Exception ex)
             {
-                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<CustomerDto>.ErrorResult(new List<string> { ex.Message},ex.Message, HttpStatusCode.NotFound);
             }
 
         }
@@ -93,7 +93,7 @@ namespace BLL.Services.CustomersService
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<List<CustomerDto>>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<List<CustomerDto>>.ErrorResult(new List<string> { ex.Message},ex.Message, HttpStatusCode.NotFound);
             }
         }
 
@@ -109,7 +109,7 @@ namespace BLL.Services.CustomersService
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<CustomerDto>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<CustomerDto>.ErrorResult(new List<string> { ex.Message},ex.Message, HttpStatusCode.NotFound);
             }
         }
         public async Task<UnifiedResponse<bool>> Upload(IFormFile file)
@@ -122,7 +122,7 @@ namespace BLL.Services.CustomersService
             }
             catch(Exception ex)
             {
-                return UnifiedResponse<bool>.ErrorResult(ex.Message, HttpStatusCode.NotFound);
+                return UnifiedResponse<bool>.ErrorResult(new List<string> { ex.Message},ex.Message, HttpStatusCode.NotFound);
             }
         }        
     }
