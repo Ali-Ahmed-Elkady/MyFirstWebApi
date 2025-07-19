@@ -8,7 +8,6 @@ namespace DAL.Entities
         public long CustomerCode { get; set; }      
         public Customers? customer { get; set; }
         public decimal ConsumptionKw { get; set; }
-        public decimal ConsumptionAmount { get; set; }
         public DateTime Month { get; set; }
     }
 }

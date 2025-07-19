@@ -4,6 +4,7 @@ using BLL.Services.Unified_Response;
 using DAL.Entities;
 using DAL.Repo.Abstraction;
 using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
 using System.Net;
 
 namespace BLL.Services.CustomersService
@@ -214,6 +215,30 @@ namespace BLL.Services.CustomersService
             {
                 throw new Exception($"Error calculating consumption cost: {ex.Message}");
             }
+        }
+        public async Task<UnifiedResponse<List<CustomerConsumptionDTO>>> IsdarConsumptions()
+        {
+            var CustomerConsumption = new List<Esdar>();
+            var result = await RepoConsumption.GetAll();
+            var Customers = mapper.Map<List<CustomerConsumptionDTO>>(result);
+            if (result is null || result.Count == 0)
+            {
+                return UnifiedResponse<List<CustomerConsumptionDTO>>.ErrorResult(new List<string> { "No consumptions found" }, "You Cannot Use Isdar Before Uploading Consumptions ", HttpStatusCode.NotFound);
+            }
+            foreach(var item in Customers)
+            {         
+               var element = await CalculateConsumptions(item);
+               CustomerConsumption.Add(new Esdar
+               {
+                   EsdarDate = DateTime.Now,
+                   ConsumptionAmount = element,
+                   CustomerConsumptionsId= item.Id,
+               });
+               
+            }
+            await repoEsdar.AddRange(CustomerConsumption);
+            return UnifiedResponse<List<CustomerConsumptionDTO>>.SuccessResult(mapper.Map<List<CustomerConsumptionDTO>>(result), HttpStatusCode.OK);
+
         }
     }
 }

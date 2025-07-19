@@ -13,13 +13,15 @@ namespace BLL.Services.CustomersService
         private readonly IRepo<Customers> repo;
         private readonly IMapper mapper;
         private readonly IRepo<CustomerConsumptions> RepoConsumption;
-        public Customer(IRepo<Customers> Repo, IMapper Mapper,IRepo<CustomerConsumptions>repoConsumption,IRepo<Tariff>tariff,IRepo<TariffSteps>steps)
+        private readonly IRepo<Esdar> repoEsdar;
+        public Customer(IRepo<Esdar> EsdarRepo,IRepo<Customers> Repo, IMapper Mapper,IRepo<CustomerConsumptions>repoConsumption,IRepo<Tariff>tariff,IRepo<TariffSteps>steps)
         {
             repo = Repo;
             mapper = Mapper;
             RepoConsumption = repoConsumption;
             repoTariff = tariff;
             repoSteps = steps;
+            repoEsdar = EsdarRepo;
         }
         public async Task<UnifiedResponse<CustomerDto>> Add(CustomerDto Customer , string UserName)
         {
