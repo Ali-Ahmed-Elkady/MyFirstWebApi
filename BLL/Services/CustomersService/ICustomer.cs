@@ -22,6 +22,6 @@ namespace BLL.Services.CustomersService
         public Task<(decimal,decimal)> CalculateConsumptions(int ConsumptionKw, int ActivityCode);
         //public Task<UnifiedResponse<CustomerConsumptionDTO>> EditConsumption(CustomerConsumptionDTO Customer);
         //Isdar
-        public Task<UnifiedResponse<List<CustomerConsumptionDTO>>> IsdarConsumptions();
+        public Task<UnifiedResponse<List<EsdarDto>>> IsdarConsumptions();
     }
 }
