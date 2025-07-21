@@ -8,30 +8,29 @@ namespace BLL.Services.TariffService
 {
     public partial class TariffService
     {
-        public async Task<UnifiedResponse<TariffStepsDto>> Add(TariffStepsDto tariff)
+        public async Task<UnifiedResponse<TariffStepsDto>> Add(List<TariffStepsDto> tariff)
         {
             try
             {
-                if (tariff != null)
+                if (tariff.Count != 0 || tariff !=null)
                 {
-                    var prevStep = (await steps.GetAll(a => a.TariffId == tariff.TariffId)).OrderByDescending(a => a.Id).FirstOrDefault();
-                    if (prevStep == null || tariff.From > prevStep.To)
+                    for (int i = 0; i < tariff.Count; i++) 
                     {
-
-                        var CurrentTariff = await repo.Get(a => a.Id == tariff.TariffId);
-                        var Activity = await ActivityRepo.Get(a => a.Id == CurrentTariff.ActivityTypeId);
-                        var Tariff = mapper.Map<TariffSteps>(tariff);
-
-                        if (tariff.IsRecalculated && prevStep!=null)
+                        var current = tariff[i];
+                        if (i > 0)
                         {
-                            Tariff.RecalculationEdge = tariff.From - 1;
-                            (decimal Total, decimal bure) result = await customer.CalculateConsumptions(Tariff.RecalculationEdge, Activity.Code);
-                            Tariff.RecalculationAddedAmount = (Tariff.RecalculationEdge * tariff.Price) - (result.bure);
+                            var previous = tariff[i - 1];
+                            if ( current.From < previous.To)
+                            {
+                                throw new Exception("the current step can't be smaller than the previous one");
+                            }
+                            if (i == tariff.Count - 1)
+                            {
+                                tariff[i].To = 999999;
+                            }
                         }
-                            await steps.Add(Tariff);
-                        return UnifiedResponse<TariffStepsDto>.SuccessResult(tariff,HttpStatusCode.OK);
                     }
-                    throw new Exception("Tariff Step Cannot be smaller Than The previous Step");
+                    await steps.AddRange(mapper.Map<List<TariffSteps>>(tariff));
                 }
                 throw new Exception("Tariff Step cannot be null");
             }
